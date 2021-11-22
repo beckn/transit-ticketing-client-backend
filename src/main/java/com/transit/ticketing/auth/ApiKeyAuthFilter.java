@@ -19,7 +19,7 @@ public class ApiKeyAuthFilter extends AbstractPreAuthenticatedProcessingFilter {
 
     @Override
     protected Object getPreAuthenticatedCredentials(HttpServletRequest request) {
-        return "N/A";
+        return null;
     }
 
 }
