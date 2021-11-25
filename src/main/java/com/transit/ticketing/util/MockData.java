@@ -18,17 +18,17 @@ public class MockData {
     AvailabilityDto availability1 = new AvailabilityDto();
     availability1.setTripId("TRIP0001");
     availability1.setSlot("10:00");
-    availability1.setSeats("N2");
+    availability1.setSeats(12);
 
     AvailabilityDto availability2 = new AvailabilityDto();
     availability2.setTripId("TRIP0002");
     availability2.setSlot("12:30");
-    availability2.setSeats("N3");
+    availability2.setSeats(8);
 
     AvailabilityDto availability3 = new AvailabilityDto();
     availability3.setTripId("TRIP0003");
     availability3.setSlot("16:30");
-    availability3.setSeats("N4");
+    availability3.setSeats(15);
 
     availabilityDtoList.add(availability1);
     availabilityDtoList.add(availability2);
