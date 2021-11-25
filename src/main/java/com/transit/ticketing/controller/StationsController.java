@@ -31,5 +31,11 @@ public class StationsController {
     	        LOG.info("Received request: /api/v1/stations?origin", origin);
     	        return stationService.getStationsById(origin);
     }
+    
+    @RequestMapping(value = "/api/v1/secure/stationsByLocation", method = RequestMethod.GET)
+	 public ResponseEntity<Stations> getStationsByLocation(@RequestParam(required = true) String lat,@RequestParam(required = true) String lon) {
+	        LOG.info("Received request: /api/v1/stations?origin", lat,lon);
+	        return stationService.getStationsByLocation(lat,lon);
+}
    
 }
