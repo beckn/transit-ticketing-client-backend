@@ -2,6 +2,8 @@ package com.transit.ticketing.controller;
 
 import com.transit.ticketing.dto.BlockTicketRequestDto;
 import com.transit.ticketing.dto.BlockTicketResponseDto;
+import com.transit.ticketing.dto.BookTicketRequestDto;
+import com.transit.ticketing.dto.BookTicketResponseDto;
 import com.transit.ticketing.service.TicketBookingServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +25,12 @@ public class ETicketingController {
     public ResponseEntity<BlockTicketResponseDto> blockTicket(@RequestBody BlockTicketRequestDto blockTicketRequestDto){
         LOG.info("Received request to block ticket");
         return ticketBookingServices.blockTicket(blockTicketRequestDto);
+    }
+
+    @PostMapping("/book_ticket")
+    public ResponseEntity<BookTicketResponseDto> bookTicket(@RequestBody BookTicketRequestDto bookTicketRequestDto){
+        LOG.info("Received request to block ticket");
+        return ticketBookingServices.bookTicket(bookTicketRequestDto);
     }
 
 }

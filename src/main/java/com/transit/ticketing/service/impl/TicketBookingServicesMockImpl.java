@@ -41,4 +41,21 @@ public class TicketBookingServicesMockImpl implements TicketBookingServices {
         blockTicketResponseDto.setCardPaymentDetailsDto(cardPaymentDetailsDto);
         return ResponseEntity.ok(blockTicketResponseDto);
     }
+
+    @Override
+    public ResponseEntity<BookTicketResponseDto> bookTicket(BookTicketRequestDto bookTicketRequestDto) {
+        BookTicketResponseDto bookTicketResponseDto = new BookTicketResponseDto();
+        bookTicketResponseDto.setTicketNumber(bookTicketRequestDto.getTicketNumber());
+        bookTicketResponseDto.setTicketCode("testcode");
+        bookTicketResponseDto.setFareDetailsDto(bookTicketRequestDto.getFareDetailsDto());
+        bookTicketResponseDto.setTripDetails(bookTicketRequestDto.getTripDetails());
+        CardPaymentDetailsDto cardPaymentDetailsDto = bookTicketRequestDto.getCardPaymentDetailsDto();
+        cardPaymentDetailsDto.setReferenceNo("");
+        UPIPaymentDetailsDto upiPaymentDetailsDto = bookTicketRequestDto.getUpiPaymentDetailsDto();
+        upiPaymentDetailsDto.setReferenceNo("");
+        bookTicketResponseDto.setCardPaymentDetailsDto(cardPaymentDetailsDto);
+        bookTicketResponseDto.setUpiPaymentDetailsDto(upiPaymentDetailsDto);
+
+        return ResponseEntity.ok(bookTicketResponseDto);
+    }
 }
