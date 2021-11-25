@@ -11,7 +11,7 @@ import lombok.ToString;
 @Data
 @EqualsAndHashCode
 @ToString
-public class Stations {
+public class Station {
 
 	@JsonProperty("id")
 	private String stopId;
@@ -59,7 +59,7 @@ public class Stations {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Stations other = (Stations) obj;
+		Station other = (Station) obj;
 		return Objects.equals(location, other.location) && Objects.equals(stopId, other.stopId)
 				&& Objects.equals(stopName, other.stopName);
 	}
