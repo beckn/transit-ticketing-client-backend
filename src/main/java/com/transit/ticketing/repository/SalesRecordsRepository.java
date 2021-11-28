@@ -18,4 +18,8 @@ public interface SalesRecordsRepository extends JpaRepository<SalesRecords,Long>
     @Modifying
     @Query(value="update sales_records set status = ?1 where order_id = ?2",nativeQuery = true)
     int setStatusForSalesRecords(String status, Long id);
+
+    @Modifying
+    @Query(value="update sales_records set signature = ?1 where order_id = ?2",nativeQuery = true)
+    int setSignatureForSalesRecords(String signature, Long id);
 }
