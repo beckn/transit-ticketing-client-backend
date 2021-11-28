@@ -13,4 +13,5 @@ public class FareDetailsDto {
     private double base;
     private double cgst;
     private double sgst;
+    private String payment_type;
 }
