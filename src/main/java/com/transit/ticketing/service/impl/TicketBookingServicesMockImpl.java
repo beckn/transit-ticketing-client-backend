@@ -6,8 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
-public class TicketBookingServicesMockImpl implements TicketBookingServices {
-    @Override
+public class TicketBookingServicesMockImpl{
+
     public ResponseEntity<BlockTicketResponseDto> blockTicket(BlockTicketRequestDto blockTicketRequestDto) {
         BlockTicketResponseDto blockTicketResponseDto = new BlockTicketResponseDto();
         blockTicketResponseDto.setTicket_no("123");
@@ -42,7 +42,7 @@ public class TicketBookingServicesMockImpl implements TicketBookingServices {
         return ResponseEntity.ok(blockTicketResponseDto);
     }
 
-    @Override
+
     public ResponseEntity<BookTicketResponseDto> bookTicket(BookTicketRequestDto bookTicketRequestDto) {
         BookTicketResponseDto bookTicketResponseDto = new BookTicketResponseDto();
         bookTicketResponseDto.setTicketNumber(bookTicketRequestDto.getTicketNumber());
