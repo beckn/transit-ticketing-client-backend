@@ -1,6 +1,5 @@
 package com.transit.ticketing.service.impl;
 
-import com.transit.ticketing.dao.ETicketingDao;
 import com.transit.ticketing.dto.*;
 import com.transit.ticketing.entity.*;
 import com.transit.ticketing.repository.*;
