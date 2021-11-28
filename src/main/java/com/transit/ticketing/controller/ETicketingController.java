@@ -22,13 +22,13 @@ public class ETicketingController {
     @Autowired
     TicketBookingServices ticketBookingServices;
 
-    @PostMapping("/block_ticket")
+    @PostMapping("/api/v1/secure/block_ticket")
     public ResponseEntity<BlockTicketResponseDto> blockTicket(@RequestBody BlockTicketRequestDto blockTicketRequestDto) throws ETicketingException {
         LOG.info("Received request to block ticket");
         return ticketBookingServices.blockTicket(blockTicketRequestDto);
     }
 
-    @PostMapping("/book_ticket")
+    @PostMapping("/api/v1/secure/book_ticket")
     public ResponseEntity<BookTicketResponseDto> bookTicket(@RequestBody BookTicketRequestDto bookTicketRequestDto) throws ETicketingException {
         LOG.info("Received request to block ticket");
         return ticketBookingServices.bookTicket(bookTicketRequestDto);

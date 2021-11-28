@@ -12,7 +12,7 @@ public class TicketBookingServicesMockImpl{
         BlockTicketResponseDto blockTicketResponseDto = new BlockTicketResponseDto();
         blockTicketResponseDto.setTicket_no("123");
         TripDetails tripDetails = new TripDetails();
-        tripDetails.setTrip_id("2000");
+        tripDetails.setTrip_id(blockTicketRequestDto.getTrip_id());
         tripDetails.setBoat_id("400");
         tripDetails.setDate(blockTicketRequestDto.getDate());
         tripDetails.setDestination(blockTicketRequestDto.getDestination());

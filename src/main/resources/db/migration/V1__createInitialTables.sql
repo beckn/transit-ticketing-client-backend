@@ -4,6 +4,7 @@ CREATE TABLE ROUTES (
                         PRIMARY KEY (route_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 insert into ROUTES values (300, 'smart city route');
+insert into ROUTES values (301, 'kochi route');
 
 CREATE TABLE BOATS (
                        boat_id bigint(20) NOT NULL AUTO_INCREMENT,
@@ -28,6 +29,7 @@ CREATE TABLE CALENDER (
                           PRIMARY KEY (service_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 insert into calender values (800, false, true, false, false, false, false, false, now(), now());
+insert into calender values (801, false, true, false, false, false, false, false, now(), now());
 
 CREATE TABLE TRIPS (
                        trip_id bigint(20) NOT NULL AUTO_INCREMENT,
@@ -38,6 +40,7 @@ CREATE TABLE TRIPS (
                        foreign key (service_id) references CALENDER(service_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 insert into trips values (2000, 300,800, 'trip_headsign');
+insert into trips values (2001, 301,801, 'trip_headsign');
 
 CREATE TABLE STOPS (
                        stop_id bigint(20) NOT NULL AUTO_INCREMENT,
@@ -50,6 +53,10 @@ CREATE TABLE STOPS (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 insert into STOPS values (100, 'Ernakulam South', '1.0000e32', '3.232d22', 1, true);
 insert into STOPS values (101, 'Smart City', '2.1320e32', '1.0232d22', 1, true);
+insert into STOPS values (102, 'Embarkation', '9.970072', '76.26221', 1, true);
+insert into STOPS values (103, 'Fort Kochi', '9.969376', '76.25187', 1, true);
+insert into STOPS values (104, 'Vypin', '9.973518', '76.24453', 1, true);
+insert into STOPS values (105, 'Terminals', '9.964408', '76.2628', 1, true);
 
 CREATE TABLE TRIP_INVENTORY (
                                 id bigint(20) NOT NULL,
@@ -74,7 +81,14 @@ CREATE TABLE STOP_TIMES (
                             foreign key (trip_id) references TRIPS(trip_id),
                             foreign key (stop_id) references STOPS(stop_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-insert into STOP_TIMES  values (1, 2000, now(), now(), 101, 3);
+insert into STOP_TIMES  values (1, 2000, now(), now()+5, 101, 1);
+insert into STOP_TIMES  values (2, 2000, now()+10, now()+15, 102, 2);
+insert into STOP_TIMES  values (3, 2000, now()+20, now()+35, 103, 3);
+insert into STOP_TIMES  values (4, 2000, now()+40, now()+50, 104, 4);
+insert into STOP_TIMES  values (5, 2001, now(), now()+5, 101, 1);
+insert into STOP_TIMES  values (6, 2001, now()+10, now()+15, 102, 2);
+insert into STOP_TIMES  values (7, 2001, now()+20, now()+35, 103, 3);
+insert into STOP_TIMES  values (8, 2001, now()+40, now()+50, 104, 4);
 
 CREATE TABLE STOPS_IN_ROUTE (
                                 id bigint(20) NOT NULL AUTO_INCREMENT,
@@ -96,6 +110,11 @@ CREATE TABLE FARE_RULES (
                             foreign key (destination_id ) references STOPS(stop_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 insert into FARE_RULES values (200, 100, 101);
+insert into FARE_RULES values (201, 100, 102);
+insert into FARE_RULES values (202, 100, 103);
+insert into FARE_RULES values (203, 100, 104);
+insert into FARE_RULES values (204, 101, 103);
+insert into FARE_RULES values (205, 101, 104);
 
 CREATE TABLE FARE_ATTRIBUTES (
                                  id bigint(20) NOT NULL AUTO_INCREMENT,
