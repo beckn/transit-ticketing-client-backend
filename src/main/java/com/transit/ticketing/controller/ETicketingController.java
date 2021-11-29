@@ -28,10 +28,23 @@ public class ETicketingController {
         return ticketBookingServices.blockTicket(blockTicketRequestDto);
     }
 
+
+    @PostMapping("/api/v1/secure/protocol/block_ticket")
+    public ResponseEntity<BlockTicketResponseDto> onInitBlockTicket(@RequestBody BlockTicketRequestDto blockTicketRequestDto) throws ETicketingException {
+        LOG.info("Received request to block ticket");
+        return ticketBookingServices.blockTicket(blockTicketRequestDto);
+    }
+
+
     @PostMapping("/api/v1/secure/book_ticket")
     public ResponseEntity<BookTicketResponseDto> bookTicket(@RequestBody BookTicketRequestDto bookTicketRequestDto) throws ETicketingException {
         LOG.info("Received request to block ticket");
         return ticketBookingServices.bookTicket(bookTicketRequestDto);
     }
 
+    @PostMapping("/api/v1/secure/protocol/book_ticket")
+    public ResponseEntity<BookTicketResponseDto> confirmBookTicket(@RequestBody BookTicketRequestDto bookTicketRequestDto) throws ETicketingException {
+        LOG.info("Received request to block ticket");
+        return ticketBookingServices.bookTicket(bookTicketRequestDto);
+    }
 }
