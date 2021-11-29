@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.transit.ticketing.dto.StationResponseDto;
 import com.transit.ticketing.entity.Station;
 import com.transit.ticketing.service.StationService;
 
@@ -22,7 +23,7 @@ public class StationsController {
 	private StationService stationService;
 
 	@RequestMapping(value = "/api/v1/secure/stations", method = RequestMethod.GET)
-	public ResponseEntity<List<Station>> getStationsById(@RequestParam(required = false) String origin) {
+	public ResponseEntity<List<StationResponseDto>> getStationsById(@RequestParam(required = false) String origin) {
 		if(origin == null) {
 			LOG.info("Received request: /api/v1/stations");
 		}else

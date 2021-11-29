@@ -1,6 +1,8 @@
-package com.transit.ticketing.entity;
+package com.transit.ticketing.dto;
 
 import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -9,10 +11,12 @@ import lombok.ToString;
 @Data
 @EqualsAndHashCode
 @ToString
-public class Location {
+public class LocationDetailsDto {
 
+	@JsonProperty("stopLat")
 	private String stopLat;
 	
+	@JsonProperty("stopLng")
 	private String stopLng;
 
 	public String getStopLat() {
@@ -44,7 +48,7 @@ public class Location {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Location other = (Location) obj;
+		LocationDetailsDto other = (LocationDetailsDto) obj;
 		return Objects.equals(stopLat, other.stopLat) && Objects.equals(stopLng, other.stopLng);
 	}
 
