@@ -6,6 +6,6 @@ import org.springframework.http.ResponseEntity;
 
 public interface SearchService {
 
-  ResponseEntity<SearchTripDetailsDto> searchTrip(String origin, String destination) throws ETicketingException;
+  ResponseEntity<SearchTripDetailsDto> searchTrip(String origin, String destination, boolean isGPSBasedSearch) throws ETicketingException;
 
 }

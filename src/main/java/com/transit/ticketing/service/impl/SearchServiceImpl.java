@@ -33,9 +33,25 @@ public class SearchServiceImpl implements SearchService {
   SalesRecordsRepository salesRecordsRepository;
   @Autowired
   StopTimesRespository stopTimesRespository;
+  @Autowired
+  StopsRepository stopsRepository;
 
   @Override
-  public ResponseEntity<SearchTripDetailsDto> searchTrip(String origin, String destination) throws ETicketingException {
+  public ResponseEntity<SearchTripDetailsDto> searchTrip(String origin, String destination,boolean isGPSBasedSearch) throws ETicketingException {
+    //TODO: get stop ids from lat and long.
+    // can be a post
+    if(isGPSBasedSearch){
+      String[] originLatLong = origin.split(",");
+      String[] destinationLatLon = destination.split(",");
+      Stops originStop = stopsRepository.findStopsByGPS(originLatLong[0],originLatLong[1]); //lat, lon
+      if (originStop == null) throw new ETicketingException("Could not find any nearest origin stop by given gps location");
+      Stops destinationStop = stopsRepository.findStopsByGPS(destinationLatLon[0],destinationLatLon[1]); //lat, lon
+      if (destinationStop == null) throw new ETicketingException("Could not find any nearest destination stop by given gps location");
+
+      origin = String.valueOf(originStop.getStop_id());
+      destination = String.valueOf(destinationStop.getStop_id());
+    }
+
     List<AvailabilityDto> availabilityDtos = new ArrayList<>();
     // Step 1: Get trips for given origin and destination for the same DOJ
     String journeyDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
