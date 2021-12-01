@@ -17,4 +17,6 @@ public class AvailabilityDto {
 
    private int seats;
 
+   private String timestamp;
+
 }

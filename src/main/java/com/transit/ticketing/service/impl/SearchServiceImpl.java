@@ -1,8 +1,6 @@
 package com.transit.ticketing.service.impl;
 
-import com.transit.ticketing.dto.AvailabilityDto;
-import com.transit.ticketing.dto.SearchTripDetailsDto;
-import com.transit.ticketing.dto.TripDto;
+import com.transit.ticketing.dto.*;
 import com.transit.ticketing.entity.*;
 import com.transit.ticketing.exception.ETicketingException;
 import com.transit.ticketing.repository.*;
@@ -14,9 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class SearchServiceImpl implements SearchService {
@@ -35,6 +31,8 @@ public class SearchServiceImpl implements SearchService {
   StopTimesRespository stopTimesRespository;
   @Autowired
   StopsRepository stopsRepository;
+  @Autowired
+  StationRepository stationRepository;
 
   @Override
   public ResponseEntity<SearchTripDetailsDto> searchTrip(String origin, String destination,boolean isGPSBasedSearch) throws ETicketingException {
@@ -56,6 +54,7 @@ public class SearchServiceImpl implements SearchService {
     // Step 1: Get trips for given origin and destination for the same DOJ
     String journeyDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
     List<TripInventory> tripInventories = inventoryRepository.findTripsForGivenSourceAndDestination(origin,destination);
+    HashMap<Long, Station> stopIdHashMap = new HashMap<>();
     for (TripInventory tripInventory: tripInventories){
       long tripId= tripInventory.getTripId();
 
@@ -81,10 +80,17 @@ public class SearchServiceImpl implements SearchService {
       StopTimes stopTimes=stopTimesRespository.findStopTimeForStopIdAndTripId(Long.parseLong(origin),tripId);
       SimpleDateFormat localDateFormat = new SimpleDateFormat("HH:mm");
       String time = localDateFormat.format(stopTimes.getArrivalTime());
+      SimpleDateFormat timestampDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SZ");
+      String timeStamp = timestampDateFormat.format(stopTimes.getArrivalTime());
+      availabilityDto.setTimestamp(timeStamp);
       availabilityDto.setSlot(time);
       availabilityDtos.add(availabilityDto);
-
+      if(!stopIdHashMap.containsKey(stopTimes.getScheduleId())){
+        Station station = stationRepository.findStationById(stopTimes.getScheduleId());
+        stopIdHashMap.put(stopTimes.getScheduleId(),station);
+      }
     }
+
     TripDto tripDto = new TripDto();
     tripDto.setDate(journeyDate);
     tripDto.setSource(origin);
@@ -93,6 +99,20 @@ public class SearchServiceImpl implements SearchService {
     SearchTripDetailsDto searchTripDetailsDto = new SearchTripDetailsDto();
     searchTripDetailsDto.setTripDto(tripDto);
     searchTripDetailsDto.setAvailabilityDtos(availabilityDtos);
+    List<StationResponseDto> stationResponseList = new ArrayList<>();
+    for ( Map.Entry<Long,Station> stopIdMap : stopIdHashMap.entrySet()) {
+      StationResponseDto stationResponseDto = new StationResponseDto();
+      LocationDetailsDto location = new LocationDetailsDto();
+
+      stationResponseDto.setStopId(stopIdMap.getKey().toString());
+      stationResponseDto.setStopName(stopIdMap.getValue().getStop_name());
+
+      location.setStopLat(stopIdMap.getValue().getStop_lat());
+      location.setStopLng(stopIdMap.getValue().getStop_lon());
+      stationResponseDto.setLocation(location);
+      stationResponseList.add(stationResponseDto);
+    }
+    searchTripDetailsDto.setLocationDtos(stationResponseList);
     return ResponseEntity.ok(searchTripDetailsDto);
   }
 

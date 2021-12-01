@@ -17,4 +17,7 @@ public class SearchTripDetailsDto {
       @JsonProperty("availability")
       private List<AvailabilityDto> availabilityDtos;
 
+      @JsonProperty("locations")
+      private List<StationResponseDto> locationDtos;
+
 }
