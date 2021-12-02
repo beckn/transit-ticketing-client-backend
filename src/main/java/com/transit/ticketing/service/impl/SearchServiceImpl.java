@@ -1,8 +1,7 @@
 package com.transit.ticketing.service.impl;
 
-import com.transit.ticketing.dto.AvailabilityDto;
-import com.transit.ticketing.dto.SearchTripDetailsDto;
-import com.transit.ticketing.dto.TripDto;
+import com.transit.ticketing.constants.ETicketingConstant;
+import com.transit.ticketing.dto.*;
 import com.transit.ticketing.entity.*;
 import com.transit.ticketing.exception.ETicketingException;
 import com.transit.ticketing.repository.*;
@@ -13,10 +12,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 @Service
 public class SearchServiceImpl implements SearchService {
@@ -54,7 +55,7 @@ public class SearchServiceImpl implements SearchService {
 
     List<AvailabilityDto> availabilityDtos = new ArrayList<>();
     // Step 1: Get trips for given origin and destination for the same DOJ
-    String journeyDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+    String journeyDate = new SimpleDateFormat(ETicketingConstant.DATEFORMAT).format(new Date());
     List<TripInventory> tripInventories = inventoryRepository.findTripsForGivenSourceAndDestination(origin,destination);
     for (TripInventory tripInventory: tripInventories){
       long tripId= tripInventory.getTripId();
@@ -79,9 +80,35 @@ public class SearchServiceImpl implements SearchService {
       availabilityDto.setSeats(availableTickets);
       //availabilityDto.setSlot(tripsInSchedule.get);
       StopTimes stopTimes=stopTimesRespository.findStopTimeForStopIdAndTripId(Long.parseLong(origin),tripId);
-      SimpleDateFormat localDateFormat = new SimpleDateFormat("HH:mm");
-      String time = localDateFormat.format(stopTimes.getArrivalTime());
-      availabilityDto.setSlot(time);
+      if(stopTimes==null)throw new ETicketingException("No origin stop configured in StopTimes");
+
+      TimeZone timeZone=TimeZone.getTimeZone(ETicketingConstant.TIMEZONE);
+
+      SimpleDateFormat localTimeFormat = new SimpleDateFormat(ETicketingConstant.TIMEFORMAT);
+      localTimeFormat.setTimeZone(timeZone);
+      String time = localTimeFormat.format(stopTimes.getDepartureTime());
+
+      SimpleDateFormat sdf = new SimpleDateFormat(ETicketingConstant.DATETIMEFORMAT);
+      sdf.setTimeZone(timeZone);
+      String departureDateInIST = sdf.format(stopTimes.getDepartureTime());
+
+      DepartureDto departureDto = new DepartureDto();
+      departureDto.setStopId(origin);
+      departureDto.setSlot(time);
+      departureDto.setTimestamp(departureDateInIST);
+
+      StopTimes stopTimesDestination=stopTimesRespository.findStopTimeForStopIdAndTripId(Long.parseLong(destination),tripId);
+      if(stopTimes==null)throw new ETicketingException("No destination stop configured in StopTimes");
+      String timeDestination = localTimeFormat.format(stopTimesDestination.getArrivalTime());
+
+      ArrivalDto arrivalDto = new ArrivalDto();
+      arrivalDto.setStopId(destination);
+      arrivalDto.setSlot(timeDestination);
+      arrivalDto.setTimestamp(sdf.format(stopTimes.getDepartureTime()));
+
+      availabilityDto.setArrivalDto(arrivalDto);
+      availabilityDto.setDepartureDto(departureDto);
+
       availabilityDtos.add(availabilityDto);
 
     }

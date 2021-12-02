@@ -9,12 +9,12 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 public class AvailabilityDto {
-
    @JsonProperty("trip_id")
    private String tripId;
-
-   private String slot;
-
    private int seats;
+   @JsonProperty("arrival")
+   private ArrivalDto arrivalDto;
+   @JsonProperty("departure")
+   private DepartureDto departureDto;
 
 }
