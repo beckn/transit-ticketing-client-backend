@@ -32,7 +32,7 @@ public class AuthConfiguration extends WebSecurityConfigurerAdapter {
         	@Override
             public Authentication authenticate(Authentication authentication) throws AuthenticationException {
                 String principal = (String) authentication.getPrincipal();
-                if (!(UUIDUtil.fromHex(principalRequestValue)).equals(principal))
+                if (!principalRequestValue.equals(principal))
                 {
                     throw new BadCredentialsException("The API key was not found or not the expected value.");
                 }
