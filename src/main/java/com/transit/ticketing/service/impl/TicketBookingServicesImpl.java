@@ -64,8 +64,7 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
             long destination = Long.parseLong(blockTicketRequestDto.getDestination());
             long tripId = Long.parseLong(blockTicketRequestDto.getTrip_id());
             String journeyDate = blockTicketRequestDto.getDate();
-            Date journeyDateInDateFormat = new SimpleDateFormat("yyyy-MM-dd").parse(journeyDate);
-
+            Date journeyDateInDateFormat = new SimpleDateFormat(ETicketingConstant.DATEFORMAT).parse(journeyDate);
             TripsInSchedule tripsInSchedule = tripInScheduleRepository.findByTripId(tripId);
             if(tripsInSchedule==null)throw new ETicketingException("System couldn't find schedule_id for given trip_id="+tripId);
             long scheduleId = tripsInSchedule.getScheduleId();
