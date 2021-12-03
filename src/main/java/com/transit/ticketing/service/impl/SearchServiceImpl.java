@@ -36,6 +36,10 @@ public class SearchServiceImpl implements SearchService {
   StopTimesRespository stopTimesRespository;
   @Autowired
   StopsRepository stopsRepository;
+  @Autowired
+  FareRulesRepository fareRulesRepository;
+  @Autowired
+  FareAttributesRepository fareAttributesRepository;
 
   @Override
   public ResponseEntity<SearchTripDetailsDto> searchTrip(String origin, String destination,boolean isGPSBasedSearch) throws ETicketingException {
@@ -75,8 +79,23 @@ public class SearchServiceImpl implements SearchService {
         issued = issued + record.getNumber_of_tickets();
       }
       int availableTickets  = maxCapacity - issued;
+      FareDetailsDto fareDetailsDto = new FareDetailsDto();
+      FareRules fareRules = fareRulesRepository.findByOrigin_idAndDestination_id(Long.parseLong(origin),Long.parseLong(destination));
+
+
+
       AvailabilityDto availabilityDto = new AvailabilityDto();
       availabilityDto.setTripId(String.valueOf(tripId));
+      availabilityDto.setBoatId(String.valueOf(boats.getBoat_id()));
+      if(fareRules!=null){
+        FareAttributes fareAttributes = fareAttributesRepository.findByFareId(fareRules.getFare_id());
+        if(fareAttributes!=null){
+          fareDetailsDto.setAmount(fareAttributes.getPrice());
+          fareDetailsDto.setBase(fareAttributes.getPrice());
+          fareDetailsDto.setCurrency(fareAttributes.getCurrency_type());
+          availabilityDto.setFareDetailsDto(fareDetailsDto);
+        }
+      }
       availabilityDto.setSeats(availableTickets);
       //availabilityDto.setSlot(tripsInSchedule.get);
       StopTimes stopTimes=stopTimesRespository.findStopTimeForStopIdAndTripId(Long.parseLong(origin),tripId);
