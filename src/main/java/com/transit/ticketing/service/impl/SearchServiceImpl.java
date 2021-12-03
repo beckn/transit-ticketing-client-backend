@@ -65,12 +65,12 @@ public class SearchServiceImpl implements SearchService {
       long tripId= tripInventory.getTripId();
 
       TripsInSchedule tripsInSchedule = tripInScheduleRepository.findByTripId(tripId);
-      if(tripsInSchedule==null)throw new ETicketingException("System couldn't find schedule_id for given trip_id="+tripId);
+      if(tripsInSchedule==null)continue;
       long scheduleId = tripsInSchedule.getScheduleId();
       ScheduledJourney scheduledJourney = scheduledJourneyRepository.fetchScheduled(scheduleId, journeyDate);
-      if(scheduledJourney == null)throw new ETicketingException("System couldn't find any scheduled journey for trip_id="+tripId);
+      if(scheduledJourney == null)continue;
       Boats boats = boatsRepository.findByBoat_id(scheduledJourney.getBoatId());
-      if(boats==null)throw new ETicketingException("No boats found for given scheduled journey");
+      if(boats==null)continue;
       int maxCapacity = boats.getCapacity();
       List<SalesRecords> salesRecords = salesRecordsRepository.issuesTicketsCount(Long.parseLong(origin),tripId,boats.getBoat_id(),scheduleId,journeyDate);
       // Get issues tickets count
@@ -99,7 +99,7 @@ public class SearchServiceImpl implements SearchService {
       availabilityDto.setSeats(availableTickets);
       //availabilityDto.setSlot(tripsInSchedule.get);
       StopTimes stopTimes=stopTimesRespository.findStopTimeForStopIdAndTripId(Long.parseLong(origin),tripId);
-      if(stopTimes==null)throw new ETicketingException("No origin stop configured in StopTimes");
+      if(stopTimes==null)continue;
 
       TimeZone timeZone=TimeZone.getTimeZone(ETicketingConstant.TIMEZONE);
 
@@ -117,7 +117,7 @@ public class SearchServiceImpl implements SearchService {
       departureDto.setTimestamp(departureDateInIST);
 
       StopTimes stopTimesDestination=stopTimesRespository.findStopTimeForStopIdAndTripId(Long.parseLong(destination),tripId);
-      if(stopTimes==null)throw new ETicketingException("No destination stop configured in StopTimes");
+      if(stopTimes==null)continue;
       String timeDestination = localTimeFormat.format(stopTimesDestination.getArrivalTime());
 
       ArrivalDto arrivalDto = new ArrivalDto();
