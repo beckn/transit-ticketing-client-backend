@@ -14,5 +14,4 @@ public class ArrivalDto {
     private String stopId;
     private String slot;
     private String timestamp;
-    private final String label="Arrival";
 }
