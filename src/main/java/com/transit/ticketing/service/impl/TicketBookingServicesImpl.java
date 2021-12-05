@@ -219,4 +219,19 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
         return ResponseEntity.ok(bookTicketResponseDto);
 
     }
+
+    @Override
+    @Transactional
+    public ResponseEntity<BookTicketResponseDto> bookTicketWithCash(BlockTicketRequestDto blockTicketRequestDto) throws ETicketingException {
+        ResponseEntity<BlockTicketResponseDto> blockTicketResponseDtoResponseEntity = blockTicket(blockTicketRequestDto);
+        BlockTicketResponseDto blockTicketResponseDto = blockTicketResponseDtoResponseEntity.getBody();
+        BookTicketRequestDto bookTicketRequestDto = new BookTicketRequestDto();
+        bookTicketRequestDto.setTicketNumber(blockTicketResponseDto.getTicket_no());
+        bookTicketRequestDto.setFareDetailsDto(blockTicketResponseDto.getFareDetailsDto());
+        bookTicketRequestDto.setCardPaymentDetailsDto(blockTicketResponseDto.getCardPaymentDetailsDto());
+        bookTicketRequestDto.setTripDetails(blockTicketResponseDto.getTripDetails());
+        bookTicketRequestDto.setUpiPaymentDetailsDto(blockTicketResponseDto.getUpiPaymentDetailsDto());
+        bookTicketRequestDto.setPaymentType("CASH");
+        return bookTicket(bookTicketRequestDto);
+    }
 }
