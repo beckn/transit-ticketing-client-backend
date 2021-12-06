@@ -117,7 +117,7 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
             TripDetails tripDetails = new TripDetails();
             tripDetails.setTrip_id(String.valueOf(tripId));
             tripDetails.setBoat_id(String.valueOf(boats.getBoat_id()));
-            tripDetails.setDate(journeyDateInDateFormat.toString());
+            tripDetails.setDate(journeyDate);
             tripDetails.setDestination(blockTicketRequestDto.getDestination());
             tripDetails.setSeats(blockTicketRequestDto.getSeats());
             tripDetails.setSelected_slot(blockTicketRequestDto.getSlot());
