@@ -6,18 +6,12 @@ import com.transit.ticketing.entity.*;
 import com.transit.ticketing.exception.ETicketingException;
 import com.transit.ticketing.repository.*;
 import com.transit.ticketing.service.SearchService;
-import com.transit.ticketing.util.MockData;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
+import java.util.*;
 
 @Service
 public class SearchServiceImpl implements SearchService {
@@ -40,7 +34,8 @@ public class SearchServiceImpl implements SearchService {
   FareRulesRepository fareRulesRepository;
   @Autowired
   FareAttributesRepository fareAttributesRepository;
-
+  @Autowired
+  StationRepository stationRepository;
   @Override
   public ResponseEntity<SearchTripDetailsDto> searchTrip(String origin, String destination,boolean isGPSBasedSearch) throws ETicketingException {
     //TODO: get stop ids from lat and long.
@@ -58,6 +53,8 @@ public class SearchServiceImpl implements SearchService {
     }
 
     List<AvailabilityDto> availabilityDtos = new ArrayList<>();
+    HashMap<Long, Station> stopIdHashMap = new HashMap<>();
+
     // Step 1: Get trips for given origin and destination for the same DOJ
     String journeyDate = new SimpleDateFormat(ETicketingConstant.DATEFORMAT).format(new Date());
     List<TripInventory> tripInventories = inventoryRepository.findTripsForGivenSourceAndDestination(origin,destination);
@@ -129,16 +126,41 @@ public class SearchServiceImpl implements SearchService {
       availabilityDto.setDepartureDto(departureDto);
 
       availabilityDtos.add(availabilityDto);
-
     }
+    Long originId =  Long.parseLong(origin);
+    Long destinationId =  Long.parseLong(destination);
+
+    if(!stopIdHashMap.containsKey(originId) && !stopIdHashMap.containsKey(destinationId)){
+      Station originStation = stationRepository.findStationById(originId);
+      stopIdHashMap.put(originId,originStation);
+      Station destinationStation = stationRepository.findStationById(destinationId);
+      stopIdHashMap.put(destinationId,destinationStation);
+    }
+
     TripDto tripDto = new TripDto();
     tripDto.setDate(journeyDate);
     tripDto.setSource(origin);
     tripDto.setDestination(destination);
 
+    List<StationResponseDto> stationResponseList = new ArrayList<>();
+    for ( Map.Entry<Long,Station> stopIdMap : stopIdHashMap.entrySet()) {
+      StationResponseDto stationResponseDto = new StationResponseDto();
+      LocationDetailsDto location = new LocationDetailsDto();
+
+      stationResponseDto.setStopId(stopIdMap.getKey().toString());
+      stationResponseDto.setStopName(stopIdMap.getValue().getStop_name());
+
+      location.setStopLat(stopIdMap.getValue().getStop_lat());
+      location.setStopLng(stopIdMap.getValue().getStop_lon());
+      stationResponseDto.setLocation(location);
+      stationResponseList.add(stationResponseDto);
+    }
+
     SearchTripDetailsDto searchTripDetailsDto = new SearchTripDetailsDto();
     searchTripDetailsDto.setTripDto(tripDto);
     searchTripDetailsDto.setAvailabilityDtos(availabilityDtos);
+    searchTripDetailsDto.setLocationDtos(stationResponseList);
+
     return ResponseEntity.ok(searchTripDetailsDto);
   }
 

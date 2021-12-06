@@ -19,4 +19,6 @@ public interface StationRepository extends JpaRepository<Station, String> {
 							+ "AND ORIGIN.STOP_ID = ?1)", nativeQuery = true)
 	List<Station> findAllStationsById(String stopId);
 
+	@Query(value = "SELECT STOP_ID,STOP_NAME, STOP_LAT, STOP_LON FROM STOPS WHERE STOP_ID =?1", nativeQuery = true)
+	Station findStationById(Long stationId);
 }
