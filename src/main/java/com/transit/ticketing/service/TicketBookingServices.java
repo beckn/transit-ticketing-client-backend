@@ -11,4 +11,5 @@ import org.springframework.stereotype.Service;
 public interface TicketBookingServices {
     ResponseEntity<BlockTicketResponseDto> blockTicket(BlockTicketRequestDto blockTicketRequestDto) throws ETicketingException;
     ResponseEntity<BookTicketResponseDto> bookTicket(BookTicketRequestDto bookTicketRequestDto) throws ETicketingException;
+    ResponseEntity<BookTicketResponseDto> bookTicketWithCash(BlockTicketRequestDto blockTicketRequestDto) throws ETicketingException;
 }
