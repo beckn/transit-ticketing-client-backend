@@ -22,6 +22,12 @@ public class ETicketingController {
     @Autowired
     TicketBookingServices ticketBookingServices;
 
+    @PostMapping("/api/v1/secure/book_ticket_with_cash")
+    public ResponseEntity<BookTicketResponseDto> bookTicketWithCash(@RequestBody BlockTicketRequestDto blockTicketRequestDto) throws ETicketingException {
+        LOG.info("Received request to block ticket");
+        return ticketBookingServices.bookTicketWithCash(blockTicketRequestDto);
+    }
+
     @PostMapping("/api/v1/secure/block_ticket")
     public ResponseEntity<BlockTicketResponseDto> blockTicket(@RequestBody BlockTicketRequestDto blockTicketRequestDto) throws ETicketingException {
         LOG.info("Received request to block ticket");

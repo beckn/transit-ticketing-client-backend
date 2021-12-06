@@ -6,12 +6,15 @@ import com.transit.ticketing.entity.*;
 import com.transit.ticketing.exception.ETicketingException;
 import com.transit.ticketing.repository.*;
 import com.transit.ticketing.service.SearchService;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class SearchServiceImpl implements SearchService {
@@ -36,6 +39,9 @@ public class SearchServiceImpl implements SearchService {
   FareAttributesRepository fareAttributesRepository;
   @Autowired
   StationRepository stationRepository;
+  @Value( "${app.config.availability.minutesafter}" )
+  private int minutesAfter;
+
   @Override
   public ResponseEntity<SearchTripDetailsDto> searchTrip(String origin, String destination,boolean isGPSBasedSearch) throws ETicketingException {
     //TODO: get stop ids from lat and long.
@@ -60,6 +66,20 @@ public class SearchServiceImpl implements SearchService {
     List<TripInventory> tripInventories = inventoryRepository.findTripsForGivenSourceAndDestination(origin,destination);
     for (TripInventory tripInventory: tripInventories){
       long tripId= tripInventory.getTripId();
+
+      StopTimes stopTimes=stopTimesRespository.findStopTimeForStopIdAndTripId(Long.parseLong(origin),tripId);
+      if(stopTimes==null)continue;
+
+      // If the departure time is within 5 mins of current time then only include in availability list
+
+      Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(ETicketingConstant.TIMEZONE));
+      Date currentDate = calendar.getTime();
+      TimeZone timeZone=TimeZone.getTimeZone(ETicketingConstant.TIMEZONE);
+      Date dprtrTime = stopTimes.getDepartureTime();
+      long diff = currentDate.getTime() - dprtrTime.getTime();
+      long minutes = TimeUnit.MILLISECONDS.toMinutes(diff);
+      if(minutes > minutesAfter ) continue;
+
 
       TripsInSchedule tripsInSchedule = tripInScheduleRepository.findByTripId(tripId);
       if(tripsInSchedule==null)continue;
@@ -95,10 +115,9 @@ public class SearchServiceImpl implements SearchService {
       }
       availabilityDto.setSeats(availableTickets);
       //availabilityDto.setSlot(tripsInSchedule.get);
-      StopTimes stopTimes=stopTimesRespository.findStopTimeForStopIdAndTripId(Long.parseLong(origin),tripId);
-      if(stopTimes==null)continue;
 
-      TimeZone timeZone=TimeZone.getTimeZone(ETicketingConstant.TIMEZONE);
+
+
 
       SimpleDateFormat localTimeFormat = new SimpleDateFormat(ETicketingConstant.TIMEFORMAT);
       localTimeFormat.setTimeZone(timeZone);
@@ -120,13 +139,14 @@ public class SearchServiceImpl implements SearchService {
       ArrivalDto arrivalDto = new ArrivalDto();
       arrivalDto.setStopId(destination);
       arrivalDto.setSlot(timeDestination);
-      arrivalDto.setTimestamp(sdf.format(stopTimes.getDepartureTime()));
+      arrivalDto.setTimestamp(sdf.format(stopTimesDestination.getArrivalTime()));
 
       availabilityDto.setArrivalDto(arrivalDto);
       availabilityDto.setDepartureDto(departureDto);
 
       availabilityDtos.add(availabilityDto);
     }
+    availabilityDtos.sort(new AvailabilityDTOComparator());
     Long originId =  Long.parseLong(origin);
     Long destinationId =  Long.parseLong(destination);
 
@@ -136,7 +156,6 @@ public class SearchServiceImpl implements SearchService {
       Station destinationStation = stationRepository.findStationById(destinationId);
       stopIdHashMap.put(destinationId,destinationStation);
     }
-
     TripDto tripDto = new TripDto();
     tripDto.setDate(journeyDate);
     tripDto.setSource(origin);
@@ -162,6 +181,22 @@ public class SearchServiceImpl implements SearchService {
     searchTripDetailsDto.setLocationDtos(stationResponseList);
 
     return ResponseEntity.ok(searchTripDetailsDto);
+  }
+
+  private class AvailabilityDTOComparator implements Comparator<AvailabilityDto>{
+
+    @Override
+    @SneakyThrows
+    public int compare(AvailabilityDto o1, AvailabilityDto o2) {
+      SimpleDateFormat localTimeFormat = new SimpleDateFormat(ETicketingConstant.DATETIMEFORMAT);
+      TimeZone timeZone=TimeZone.getTimeZone(ETicketingConstant.TIMEZONE);
+      localTimeFormat.setTimeZone(timeZone);
+      Date date1 = localTimeFormat.parse(o1.getDepartureDto().getTimestamp());
+      Date date2 = localTimeFormat.parse(o2.getDepartureDto().getTimestamp());
+      if(date1.before(date2))return -1;
+      if(date1.after(date2))return 1;
+      return 0;
+    }
   }
 
 }
