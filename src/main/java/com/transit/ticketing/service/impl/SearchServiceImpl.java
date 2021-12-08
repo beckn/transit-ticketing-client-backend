@@ -65,7 +65,8 @@ public class SearchServiceImpl implements SearchService {
     List<TripInventory> tripInventories = inventoryRepository.findTripsForGivenSourceAndDestination(origin,destination);
     for (TripInventory tripInventory: tripInventories){
       long tripId= tripInventory.getTripId();
-
+      int sourceStopSeq = inventoryRepository.findStopSequence(tripId,journeyDate,origin);
+      int destinationStopSeq = inventoryRepository.findStopSequence(tripId,journeyDate,destination);
       StopTimes stopTimes=stopTimesRespository.findStopTimeForStopIdAndTripId(Long.parseLong(origin),tripId);
       if(stopTimes==null)continue;
 
@@ -88,12 +89,12 @@ public class SearchServiceImpl implements SearchService {
       Boats boats = boatsRepository.findByBoat_id(scheduledJourney.getBoatId());
       if(boats==null)continue;
       int maxCapacity = boats.getCapacity();
-      List<SalesRecords> salesRecords = salesRecordsRepository.issuesTicketsCount(Long.parseLong(origin),tripId,boats.getBoat_id(),scheduleId,journeyDate);
+      //List<SalesRecords> salesRecords = salesRecordsRepository.issuesTicketsCount(Long.parseLong(origin),tripId,boats.getBoat_id(),scheduleId,journeyDate);
       // Get issues tickets count
-      int issued = 0;
-      for(SalesRecords record: salesRecords){
+      int issued = inventoryRepository.findIssuedTickets(tripId,journeyDate,sourceStopSeq,destinationStopSeq);
+      /*for(SalesRecords record: salesRecords){
         issued = issued + record.getNumber_of_tickets();
-      }
+      }*/
       int availableTickets  = maxCapacity - issued;
       FareDetailsDto fareDetailsDto = new FareDetailsDto();
       FareRules fareRules = fareRulesRepository.findByOrigin_idAndDestination_id(Long.parseLong(origin),Long.parseLong(destination));

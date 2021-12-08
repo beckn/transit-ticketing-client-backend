@@ -22,4 +22,6 @@ public class TripInventory {
     private Date doj;
     @Column(name = "stop_sequence")
     private int stopSequence;
+    @Column(name = "issued_tickets")
+    private int issuedTickets;
 }

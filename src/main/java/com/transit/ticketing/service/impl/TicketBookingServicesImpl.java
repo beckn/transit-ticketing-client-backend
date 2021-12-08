@@ -45,6 +45,8 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
     FareAttributesRepository fareAttributesRepository;
     @Autowired
     PaymentDetailsRepository paymentDetailsRepository;
+    @Autowired
+    TripInventoryRepository inventoryRepository;
 
     @Value( "${app.security.key}" )
     private String key;
@@ -64,6 +66,10 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
             long destination = Long.parseLong(blockTicketRequestDto.getDestination());
             long tripId = Long.parseLong(blockTicketRequestDto.getTrip_id());
             String journeyDate = blockTicketRequestDto.getDate();
+            TripInventory tripInventory = inventoryRepository.findTripsForGivenSourceAndDestinationAndTripId(blockTicketRequestDto.getSource(),blockTicketRequestDto.getDestination(),journeyDate,tripId);
+            if(tripInventory==null)throw new ETicketingException("System couldn't find given trip_id in inventory table.");
+            int sourceStopSeq = inventoryRepository.findStopSequence(tripId,journeyDate,blockTicketRequestDto.getSource());
+            int destinationStopSeq = inventoryRepository.findStopSequence(tripId,journeyDate,blockTicketRequestDto.getDestination());
             Date journeyDateInDateFormat = new SimpleDateFormat(ETicketingConstant.DATEFORMAT).parse(journeyDate);
             TripsInSchedule tripsInSchedule = tripInScheduleRepository.findByTripId(tripId);
             if(tripsInSchedule==null)throw new ETicketingException("System couldn't find schedule_id for given trip_id="+tripId);
@@ -73,12 +79,12 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
             Boats boats = boatsRepository.findByBoat_id(scheduledJourney.getBoatId());
             if(boats==null)throw new ETicketingException("No boats found for given scheduled journey");
             int maxCapacity = boats.getCapacity();
-            List<SalesRecords> salesRecords = salesRecordsRepository.issuesTicketsCount(source,tripId,boats.getBoat_id(),scheduleId,journeyDate);
+            //List<SalesRecords> salesRecords = salesRecordsRepository.issuesTicketsCount(source,tripId,boats.getBoat_id(),scheduleId,journeyDate);
             // Get issues tickets count
-            int issued = 0;
-            for(SalesRecords record: salesRecords){
+            int issued = inventoryRepository.findIssuedTickets(tripId,journeyDate,sourceStopSeq,destinationStopSeq);
+            /*for(SalesRecords record: salesRecords){
                 issued = issued + record.getNumber_of_tickets();
-            }
+            }*/
             int availableTickets  = maxCapacity - issued;
             if(availableTickets < blockTicketRequestDto.getSeats()) throw new ETicketingException("Less tickets are available. Wont proceed with blocking tickets");
             // get fare attribute for a ticket
@@ -103,6 +109,10 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
             record.setStatus(ETicketingConstant.BLOCKED);
 
             SalesRecords saved = salesRecordsRepository.save(record);
+            //UPDATE issued tickets
+
+            int rowsEffected = inventoryRepository.updateIssuedTicketCount(tripId,journeyDate,sourceStopSeq,destinationStopSeq,blockTicketRequestDto.getSeats());
+            if(rowsEffected==0) throw new ETicketingException("System failed to update issued ticket count");
             //Update signature in sales record
             String signature = "order_id:"+saved.getOrder_id()+";trip_id:"+tripId+";schedule_id:"+scheduleId+";doj:"+journeyDate+";ori_stop:"+source+";dest_stop:"+destination+";no:"+ blockTicketRequestDto.getSeats()+";created:"+new Date();
             System.out.println(signature);
@@ -110,7 +120,6 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
             String encryptedSign = AESUtil.encrypt(signature,skeySpec,AESUtil.generateIv(iv));
             salesRecordsRepository.setSignatureForSalesRecords(encryptedSign,saved.getOrder_id());
             // Return ticket details
-
 
             BlockTicketResponseDto blockTicketResponseDto = new BlockTicketResponseDto();
             blockTicketResponseDto.setTicket_no(String.valueOf(saved.getOrder_id()));
