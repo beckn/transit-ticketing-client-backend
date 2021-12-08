@@ -64,6 +64,7 @@ CREATE TABLE TRIP_INVENTORY (
                                 stop_id bigint(20) NOT NULL,
                                 trip_id bigint(20) NOT NULL,
                                 stop_sequence int,
+                                issued_tickets INT NOT NULL DEFAULT 0,
                                 PRIMARY KEY (id),
                                 foreign key (stop_id) references STOPS(stop_id),
                                 foreign key (trip_id) references TRIPS(trip_id)
