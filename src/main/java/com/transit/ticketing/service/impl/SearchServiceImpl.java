@@ -77,8 +77,8 @@ public class SearchServiceImpl implements SearchService {
       Date currentDate = calendar.getTime();
       TimeZone timeZone=TimeZone.getTimeZone(ETicketingConstant.TIMEZONE);
       Date dprtrTime = stopTimes.getDepartureTime();
-      long diff = currentDate.getTime() - dprtrTime.getTime();
-      long minutes = TimeUnit.MILLISECONDS.toMinutes(diff);
+      //long diff = currentDate.getTime() - dprtrTime.getTime();
+      long minutes = compareTimes(currentDate,dprtrTime);
       if(minutes > minutesAfter ) continue;
 
 
@@ -121,26 +121,32 @@ public class SearchServiceImpl implements SearchService {
 
 
       SimpleDateFormat localTimeFormat = new SimpleDateFormat(ETicketingConstant.TIMEFORMAT);
-      localTimeFormat.setTimeZone(timeZone);
+      //localTimeFormat.setTimeZone(timeZone);
       String time = localTimeFormat.format(stopTimes.getDepartureTime());
 
       SimpleDateFormat sdf = new SimpleDateFormat(ETicketingConstant.DATETIMEFORMAT);
-      sdf.setTimeZone(timeZone);
+      //sdf.setTimeZone(timeZone);
       String departureDateInIST = sdf.format(stopTimes.getDepartureTime());
+
+      SimpleDateFormat sdfForTimePart = new SimpleDateFormat(ETicketingConstant.TIMEFORMATWITHZONE);
+      //sdf.setTimeZone(timeZone);
+      String departureTimePart = sdfForTimePart.format(stopTimes.getDepartureTime());
+
 
       DepartureDto departureDto = new DepartureDto();
       departureDto.setStopId(origin);
       departureDto.setSlot(time);
-      departureDto.setTimestamp(departureDateInIST);
+      departureDto.setTimestamp(journeyDate+"T"+departureTimePart);
 
       StopTimes stopTimesDestination=stopTimesRespository.findStopTimeForStopIdAndTripId(Long.parseLong(destination),tripId);
-      if(stopTimes==null)continue;
+      if(stopTimesDestination==null)continue;
+      String arrivalTimePart = sdfForTimePart.format(stopTimesDestination.getArrivalTime());
       String timeDestination = localTimeFormat.format(stopTimesDestination.getArrivalTime());
 
       ArrivalDto arrivalDto = new ArrivalDto();
       arrivalDto.setStopId(destination);
       arrivalDto.setSlot(timeDestination);
-      arrivalDto.setTimestamp(sdf.format(stopTimesDestination.getArrivalTime()));
+      arrivalDto.setTimestamp(journeyDate+"T"+arrivalTimePart);
 
       availabilityDto.setArrivalDto(arrivalDto);
       availabilityDto.setDepartureDto(departureDto);
@@ -198,6 +204,25 @@ public class SearchServiceImpl implements SearchService {
       if(date1.after(date2))return 1;
       return 0;
     }
+  }
+
+  private long compareTimes(Date d1, Date d2){
+    Calendar calendar = Calendar.getInstance();
+    calendar.setTime(d1);
+    int hours = calendar.get(Calendar.HOUR_OF_DAY);
+    int minutes = calendar.get(Calendar.MINUTE);
+    int seconds = calendar.get(Calendar.SECOND);
+
+    Calendar calendar2 = Calendar.getInstance();
+    calendar.setTime(d2);
+    int hours2 = calendar.get(Calendar.HOUR_OF_DAY);
+    int minutes2 = calendar.get(Calendar.MINUTE);
+    int seconds2 = calendar.get(Calendar.SECOND);
+
+    long t1 = hours*60*60+minutes*60+seconds;
+    long t2 = hours2*60*60+minutes2*60+seconds2;
+
+    return (t1-t2)/60;
   }
 
 }
