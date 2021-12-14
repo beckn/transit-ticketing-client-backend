@@ -2,13 +2,17 @@ package com.transit.ticketing.service.impl;
 
 import antlr.StringUtils;
 import com.transit.ticketing.cipher.AESUtil;
+import com.transit.ticketing.cipher.Cryptic;
 import com.transit.ticketing.constants.ETicketingConstant;
+import com.transit.ticketing.controller.SecureController;
 import com.transit.ticketing.dto.*;
 import com.transit.ticketing.entity.*;
 import com.transit.ticketing.exception.ETicketingException;
 import com.transit.ticketing.repository.*;
 import com.transit.ticketing.service.TicketBookingServices;
 import org.apache.logging.log4j.util.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -19,18 +23,24 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 import javax.transaction.Transactional;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 
 @Service
 public class TicketBookingServicesImpl implements TicketBookingServices {
+    private static final Logger LOG = LoggerFactory.getLogger(TicketBookingServicesImpl.class);
     @Autowired
     TripInScheduleRepository tripInScheduleRepository;
     @Autowired
@@ -47,6 +57,8 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
     PaymentDetailsRepository paymentDetailsRepository;
     @Autowired
     TripInventoryRepository inventoryRepository;
+    @Autowired
+    StopTimesRespository stopTimesRespository;
 
     @Value( "${app.security.key}" )
     private String key;
@@ -114,11 +126,48 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
             int rowsEffected = inventoryRepository.updateIssuedTicketCount(tripId,journeyDate,sourceStopSeq,destinationStopSeq,blockTicketRequestDto.getSeats());
             if(rowsEffected==0) throw new ETicketingException("System failed to update issued ticket count");
             //Update signature in sales record
-            String signature = "order_id:"+saved.getOrder_id()+";trip_id:"+tripId+";schedule_id:"+scheduleId+";doj:"+journeyDate+";ori_stop:"+source+";dest_stop:"+destination+";no:"+ blockTicketRequestDto.getSeats()+";created:"+new Date();
-            System.out.println(signature);
-            SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes("UTF-8"), "AES");
-            String encryptedSign = AESUtil.encrypt(signature,skeySpec,AESUtil.generateIv(iv));
+            String signature = "order_id:"+saved.getOrder_id()+";trip_id:"+tripId+";schedule_id:"+scheduleId+";doj:"+journeyDate+";ori_stop:"+source+";dest_stop:"+destination+";no:"+ blockTicketRequestDto.getSeats()+";created:"+new Date()+";boat_id:"+boats.getBoat_id();
+            String encryptedSign = "";
+            try{
+                encryptedSign = signature+";signature:"+Cryptic.sign(signature);
+                encryptedSign = Base64.getEncoder().encodeToString(encryptedSign.getBytes(StandardCharsets.UTF_8));
+            }catch (Exception e){
+                // Ignore exception
+                LOG.error("Error occurred while signing: "+e.getMessage());
+            }
+
             salesRecordsRepository.setSignatureForSalesRecords(encryptedSign,saved.getOrder_id());
+
+            StopTimes stopTimes=stopTimesRespository.findStopTimeForStopIdAndTripId(source,tripId);
+
+            SimpleDateFormat localTimeFormat = new SimpleDateFormat(ETicketingConstant.TIMEFORMAT);
+            //localTimeFormat.setTimeZone(timeZone);
+            String time = localTimeFormat.format(stopTimes.getDepartureTime());
+
+            SimpleDateFormat sdf = new SimpleDateFormat(ETicketingConstant.DATETIMEFORMAT);
+            //sdf.setTimeZone(timeZone);
+
+            SimpleDateFormat sdfForTimePart = new SimpleDateFormat(ETicketingConstant.TIMEFORMATWITHZONE);
+            //sdf.setTimeZone(timeZone);
+            String departureTimePart = sdfForTimePart.format(stopTimes.getDepartureTime());
+
+
+            DepartureDto departureDto = new DepartureDto();
+            departureDto.setStopId(String.valueOf(source));
+            departureDto.setSlot(time);
+            departureDto.setTimestamp(journeyDate+"T"+departureTimePart);
+
+
+            StopTimes stopTimesDestination=stopTimesRespository.findStopTimeForStopIdAndTripId(destination,tripId);
+
+            String arrivalTimePart = sdfForTimePart.format(stopTimesDestination.getArrivalTime());
+            String timeDestination = localTimeFormat.format(stopTimesDestination.getArrivalTime());
+
+            ArrivalDto arrivalDto = new ArrivalDto();
+            arrivalDto.setStopId(String.valueOf(destination));
+            arrivalDto.setSlot(timeDestination);
+            arrivalDto.setTimestamp(journeyDate+"T"+arrivalTimePart);
+
             // Return ticket details
 
             BlockTicketResponseDto blockTicketResponseDto = new BlockTicketResponseDto();
@@ -129,8 +178,10 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
             tripDetails.setDate(journeyDate);
             tripDetails.setDestination(blockTicketRequestDto.getDestination());
             tripDetails.setSeats(blockTicketRequestDto.getSeats());
-            tripDetails.setSelected_slot(blockTicketRequestDto.getSlot());
+            tripDetails.setSelected_slot(time);
             tripDetails.setSource(blockTicketRequestDto.getSource());
+            tripDetails.setArrivalDto(arrivalDto);
+            tripDetails.setDepartureDto(departureDto);
             blockTicketResponseDto.setTripDetails(tripDetails);
 
             FareDetailsDto fareDetailsDto = new FareDetailsDto();
@@ -151,13 +202,13 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
             cardPaymentDetailsDto.setPaymentURL("");
 
             blockTicketResponseDto.setCardPaymentDetailsDto(cardPaymentDetailsDto);
+
+            blockTicketResponseDto.setSignature(encryptedSign);
             return ResponseEntity.ok(blockTicketResponseDto);
-        } catch (ParseException | ETicketingException | UnsupportedEncodingException e) {
+        } catch (ParseException | ETicketingException e) {
             throw new ETicketingException(e);
         } catch (NumberFormatException nfe ){
             throw new ETicketingException("Please provide valid input for blocking tickets");
-        } catch (InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | BadPaddingException | InvalidKeyException e) {
-            throw new ETicketingException("Error occured while encrypting sign");
         } finally {
 
         }
@@ -175,9 +226,11 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
         SalesRecords records=salesRecordsRepository.findSalesRecordsWithOrderId(orderId);
         if(records==null)throw new ETicketingException("No sales record found for given order id="+orderId);
 
+
+
         BookTicketResponseDto bookTicketResponseDto = new BookTicketResponseDto();
         bookTicketResponseDto.setTicketNumber(bookTicketRequestDto.getTicketNumber());
-        bookTicketResponseDto.setTicketCode("testcode");
+        bookTicketResponseDto.setTicketCode(bookTicketRequestDto.getSignature());
         bookTicketResponseDto.setFareDetailsDto(bookTicketRequestDto.getFareDetailsDto());
         bookTicketResponseDto.getFareDetailsDto().setPayment_type(bookTicketRequestDto.getPaymentType());
         bookTicketResponseDto.setTripDetails(bookTicketRequestDto.getTripDetails());
@@ -241,6 +294,7 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
         bookTicketRequestDto.setTripDetails(blockTicketResponseDto.getTripDetails());
         bookTicketRequestDto.setUpiPaymentDetailsDto(blockTicketResponseDto.getUpiPaymentDetailsDto());
         bookTicketRequestDto.setPaymentType("CASH");
+        bookTicketRequestDto.setSignature(blockTicketResponseDto.getSignature());
         return bookTicket(bookTicketRequestDto);
     }
 }

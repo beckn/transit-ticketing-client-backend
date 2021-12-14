@@ -21,4 +21,5 @@ public class BookTicketRequestDto {
     private UPIPaymentDetailsDto upiPaymentDetailsDto;
     @JsonProperty("card_payment")
     private CardPaymentDetailsDto cardPaymentDetailsDto;
+    private String signature;
 }
