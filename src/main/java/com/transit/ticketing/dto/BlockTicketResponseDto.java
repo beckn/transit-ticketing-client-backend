@@ -1,5 +1,6 @@
 package com.transit.ticketing.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,4 +19,6 @@ public class BlockTicketResponseDto {
     private UPIPaymentDetailsDto upiPaymentDetailsDto;
     @JsonProperty("card_payment")
     private CardPaymentDetailsDto cardPaymentDetailsDto;
+    @JsonIgnore
+    private String signature;
 }
