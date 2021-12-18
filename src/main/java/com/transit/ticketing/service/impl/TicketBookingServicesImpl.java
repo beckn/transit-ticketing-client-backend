@@ -226,8 +226,6 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
         SalesRecords records=salesRecordsRepository.findSalesRecordsWithOrderId(orderId);
         if(records==null)throw new ETicketingException("No sales record found for given order id="+orderId);
 
-
-
         BookTicketResponseDto bookTicketResponseDto = new BookTicketResponseDto();
         bookTicketResponseDto.setTicketNumber(bookTicketRequestDto.getTicketNumber());
         bookTicketResponseDto.setTicketCode(bookTicketRequestDto.getSignature());

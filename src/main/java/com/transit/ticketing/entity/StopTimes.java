@@ -7,7 +7,7 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name="trip_inventory")
+@Table(name="stop_times")
 @Data
 @NoArgsConstructor
 public class StopTimes {
@@ -15,7 +15,7 @@ public class StopTimes {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     @Column(name = "stop_id")
-    private long scheduleId;
+    private long stopId;
     @Column(name = "trip_id")
     private long tripId;
     @Column(name="arrival_time")

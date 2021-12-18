@@ -49,9 +49,22 @@ public final class Cryptic {
         /*String req = "b3JkZXJfaWQ6MTAyNzt0cmlwX2lkOjIwMDA7c2NoZWR1bGVfaWQ6OTAwO2RvajoyMDIxLTEyLTE0O29yaV9zdG9wOjEwMTtkZXN0X3N0b3A6MTAyO25vOjI7Y3JlYXRlZDpUdWUgRGVjIDE0IDExOjIwOjQ0IElTVCAyMDIxO2JvYXRfaWQ6NDAwO3NpZ25hdHVyZTpWRWtJR1VTeUZnR3hMZkpVVVF6MDRSTFEzYkNKWDVyZXRtbG0rQ1NsOWMxSDZiOFFIVU1sbm5TZlVDV2RNMGlyS3hVczlFUjlHUk1hMkdIL0VtVmp5MUR2d1dQK1RnMUQwU3BYaXJmT1dmZ1BtYm1hMS9OeXRWaVRRb2JLN0FvcFFJbG9QU1p6V0lONEZ1OHFTTXFhU2l4b2NCMWZBSXRpOGhKV3hrYTUzeFB4NjVNRWdhdk5OZUxxdE1oSVJ3blJrVmVOVWdHdWNVdmJnZ3FwS1BFWEs1NVBaR2Q3SlhkeXpLalhQclVPdUNKMHdmdDl3aStRcHpiVFdqa1U1QzR1Zm5vMEN0dWVwNXdhYktqK2FSRTd2eUw5TFFrQmJ4ampLa0VqQkFHbUNoRGZNczdLbDVyNEs0c21XMTl3d2JlQzRwT1pTNnFaS3hhQ3R1aGJUTldldlE9PQ==";
         byte[] dec = Base64.getDecoder().decode(req);*/
 
-        String re = "order_id:1028;trip_id:2000;schedule_id:900;doj:2021-12-14;ori_stop:101;dest_stop:102;no:2;created:Tue Dec 14 11:20:44 IST 2021;boat_id:400";
+        //String re = "order_id:1028;trip_id:2000;schedule_id:900;doj:2021-12-14;ori_stop:101;dest_stop:102;no:2;created:Tue Dec 14 11:20:44 IST 2021;boat_id:400;";
+        //String sign = "VEkIGUSyFgGxLfJUUQz04RLQ3bCJX5retmlm+CSl9c1H6b8QHUMlnnSfUCWdM0irKxUs9ER9GRMa2GH/EmVjy1DvwWP+Tg1D0SpXirfOWfgPmbma1/NytViTQobK7AopQIloPSZzWIN4Fu8qSMqaSixocB1fAIti8hJWxka53xPx65MEgavNNeLqtMhIRwnRkVeNUgGucUvbggqpKPEXK55PZGd7JXdyzKjXPrUOuCJ0wft9wi+QpzbTWjkU5C4ufno0Ctuep5wabKj+aRE7vyL9LQkBbxjjKkEjBAGmChDfMs7Kl5r4K4smW19wwbeC4pOZS6qZKxaCtuhbTNWevQ==";
+
+        //System.out.println(Cryptic.verify(re,sign));
+
+        String reBody="b3JkZXJfaWQ6MTAyNzt0cmlwX2lkOjIwMDA7c2NoZWR1bGVfaWQ6OTAwO2RvajoyMDIxLTEyLTE0O29yaV9zdG9wOjEwMTtkZXN0X3N0b3A6MTAyO25vOjI7Y3JlYXRlZDpUdWUgRGVjIDE0IDExOjIwOjQ0IElTVCAyMDIxO2JvYXRfaWQ6NDAwO3NpZ25hdHVyZTpWRWtJR1VTeUZnR3hMZkpVVVF6MDRSTFEzYkNKWDVyZXRtbG0rQ1NsOWMxSDZiOFFIVU1sbm5TZlVDV2RNMGlyS3hVczlFUjlHUk1hMkdIL0VtVmp5MUR2d1dQK1RnMUQwU3BYaXJmT1dmZ1BtYm1hMS9OeXRWaVRRb2JLN0FvcFFJbG9QU1p6V0lONEZ1OHFTTXFhU2l4b2NCMWZBSXRpOGhKV3hrYTUzeFB4NjVNRWdhdk5OZUxxdE1oSVJ3blJrVmVOVWdHdWNVdmJnZ3FwS1BFWEs1NVBaR2Q3SlhkeXpLalhQclVPdUNKMHdmdDl3aStRcHpiVFdqa1U1QzR1Zm5vMEN0dWVwNXdhYktqK2FSRTd2eUw5TFFrQmJ4ampLa0VqQkFHbUNoRGZNczdLbDVyNEs0c21XMTl3d2JlQzRwT1pTNnFaS3hhQ3R1aGJUTldldlE9PQ==";
+        byte[] dec = Base64.getDecoder().decode(reBody);
+        String decodedString = new String(dec);
+        System.out.println(decodedString);
+
+        // order_id:1027;trip_id:2000;schedule_id:900;doj:2021-12-14;ori_stop:101;dest_stop:102;no:2;created:Tue Dec 14 11:20:44 IST 2021;boat_id:400;signature:VEkIGUSyFgGxLfJUUQz04RLQ3bCJX5retmlm+CSl9c1H6b8QHUMlnnSfUCWdM0irKxUs9ER9GRMa2GH/EmVjy1DvwWP+Tg1D0SpXirfOWfgPmbma1/NytViTQobK7AopQIloPSZzWIN4Fu8qSMqaSixocB1fAIti8hJWxka53xPx65MEgavNNeLqtMhIRwnRkVeNUgGucUvbggqpKPEXK55PZGd7JXdyzKjXPrUOuCJ0wft9wi+QpzbTWjkU5C4ufno0Ctuep5wabKj+aRE7vyL9LQkBbxjjKkEjBAGmChDfMs7Kl5r4K4smW19wwbeC4pOZS6qZKxaCtuhbTNWevQ==
+
+        String re = "order_id:1027;trip_id:2000;schedule_id:900;doj:2021-12-14;ori_stop:101;dest_stop:102;no:2;created:Tue Dec 14 11:20:44 IST 2021;boat_id:400";
         String sign = "VEkIGUSyFgGxLfJUUQz04RLQ3bCJX5retmlm+CSl9c1H6b8QHUMlnnSfUCWdM0irKxUs9ER9GRMa2GH/EmVjy1DvwWP+Tg1D0SpXirfOWfgPmbma1/NytViTQobK7AopQIloPSZzWIN4Fu8qSMqaSixocB1fAIti8hJWxka53xPx65MEgavNNeLqtMhIRwnRkVeNUgGucUvbggqpKPEXK55PZGd7JXdyzKjXPrUOuCJ0wft9wi+QpzbTWjkU5C4ufno0Ctuep5wabKj+aRE7vyL9LQkBbxjjKkEjBAGmChDfMs7Kl5r4K4smW19wwbeC4pOZS6qZKxaCtuhbTNWevQ==";
 
         System.out.println(Cryptic.verify(re,sign));
+
     }
 }

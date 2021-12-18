@@ -9,6 +9,6 @@ import java.util.Date;
 import java.util.List;
 
 public interface ScheduledJourneyRepository extends JpaRepository<ScheduledJourney,Long> {
-    @Query(value = "select * from scheduled_journey where schedule_id = ?1 and journey_date like ?2%",nativeQuery = true)
+    @Query(value = "select * from scheduled_journey where schedule_id = ?1",nativeQuery = true)
     ScheduledJourney fetchScheduled(long scheduledId, String jouneyDate);
 }
