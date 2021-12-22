@@ -15,7 +15,7 @@ public class TripInventory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     @Column(name = "stop_id")
-    private long scheduleId;
+    private long stopId;
     @Column(name = "trip_id")
     private long tripId;
     @Column(name = "journey_date")
