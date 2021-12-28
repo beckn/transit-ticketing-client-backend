@@ -1,10 +1,12 @@
 package com.transit.ticketing.cipher;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.*;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -12,59 +14,65 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 public final class Cryptic {
-    public static String sign(String requestBody) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, IOException {
-        File privateKeyFile = new File("private.key");
-        byte[] privateKeyBytes = Files.readAllBytes(privateKeyFile.toPath());
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+    public static String sign(String requestBody) throws Exception {
+        PrivateKey privKey = readPrivateKey(new File("private.pem"));
         Signature sig = Signature.getInstance("SHA256withRSA");
-
-        // extract the private key
-
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
-        PrivateKey privKey = keyFactory.generatePrivate(keySpec);
         sig.initSign(privKey);
-
         sig.update(requestBody.getBytes(StandardCharsets.UTF_8));
         byte[] s = sig.sign();
-        String encodedString = Base64.getEncoder().encodeToString(s);
-        return encodedString;
+        return Base64.getEncoder().encodeToString(s);
     }
-    public static boolean verify(String requestBody,String signature) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, IOException {
-        File publicKeyFile = new File("public.key");
-        byte[] publicKeyBytes = Files.readAllBytes(publicKeyFile.toPath());
+    public static boolean verify(String requestBody,String signature) throws Exception {
+        PublicKey pubKey = readPublicKey(new File("public.pem"));
+        Signature sig2 = Signature.getInstance("SHA256withRSA");
+        sig2.initVerify(pubKey);
+        sig2.update(requestBody.getBytes(StandardCharsets.UTF_8));
+        return sig2.verify(signature.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public static void main(String[] args) throws Exception {
+        String enc = "b3JkZXJfaWQ6MTAzMDt0cmlwX2lkOjIwMDA7c2NoZWR1bGVfaWQ6OTAwO2RvajoyMDIxLTEyLTE1O29yaV9zdG9wOjEwMTtkZXN0X3N0b3A6MTAyO25vOjI7Y3JlYXRlZDpUdWUgRGVjIDI4IDEwOjM3OjA2IElTVCAyMDIxO2JvYXRfaWQ6NDAwO3NpZ25hdHVyZTpJQkYveTJBNzhJc0hnZndaU2lsOEQxUHpvKzJDd2o1L1BCT0FLeW5VcG1SaWtDdHhzRlZ3WERzU3J3OFNPby9OUTNmdUpBbWtubTJpS1BIQ3lPUkVZa0VZTC91Z0pHTUpPSi82OXhwV3RIVHVXblhTNWgzeXpUTEtWUy9yOThLY3hnR3JlTk1MR2tGcFBXc3R6V3EraXpIbjBUbVlmcWxSSWxHMnc1N0tCZHNQbUc4OExnVnowUUthaTJBYTROUm96ck5aK1RnY2JRMXRTTU94cWVWRDl0cHMrdUlTVjJmRytsVlZadXRraGR3ejJuWXlhZldERSthbmJVNEVMUnJMMWxHVXZ1QXAraEZEWGlZT0ttNUR1RFYrNC8zNmI4czJKUEx6L1RIc3c1MXlwRkdnMExKYjFLdHkyazJ0b3IzQ0pMYUR0TkQ2K2g4bTNrSHp3cUhlV3c9PQ==";
+        String dec = new String(Base64.getDecoder().decode(enc));
+        System.out.println(dec);
+        String req = "order_id:1030;trip_id:2000;schedule_id:900;doj:2021-12-15;ori_stop:101;dest_stop:102;no:2;created:Tue Dec 28 10:37:06 IST 2021;boat_id:400";
+        String sign = "IBF/y2A78IsHgfwZSil8D1Pzo+2Cwj5/PBOAKynUpmRikCtxsFVwXDsSrw8SOo/NQ3fuJAmknm2iKPHCyOREYkEYL/ugJGMJOJ/69xpWtHTuWnXS5h3yzTLKVS/r98KcxgGreNMLGkFpPWstzWq+izHn0TmYfqlRIlG2w57KBdsPmG88LgVz0QKai2Aa4NRozrNZ+TgcbQ1tSMOxqeVD9tps+uISV2fG+lVVZutkhdwz2nYyafWDE+anbU4ELRrL1lGUvuAp+hFDXiYOKm5DuDV+4/36b8s2JPLz/THsw51ypFGg0LJb1Kty2k2tor3CJLaDtND6+h8m3kHzwqHeWw==";
+        PublicKey pubKey = readPublicKey(new File("public.pem"));
+        Signature sig2 = Signature.getInstance("SHA256withRSA");
+        sig2.initVerify(pubKey);
+        sig2.update(req.getBytes(StandardCharsets.UTF_8));
+        boolean result = sig2.verify(Base64.getDecoder().decode(sign));
+        System.out.println(result);
+    }
+
+    public static RSAPrivateKey readPrivateKey(File file) throws Exception {
+        String key = new String(Files.readAllBytes(file.toPath()), Charset.defaultCharset());
+
+        String privateKeyPEM = key
+                .replace("-----BEGIN PRIVATE KEY-----", "")
+                .replaceAll(System.lineSeparator(), "")
+                .replace("\n", "")
+                .replace("-----END PRIVATE KEY-----", "");
+
+        byte[] encoded = Base64.getDecoder().decode(privateKeyPEM);
+
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(publicKeyBytes);
-        Signature sig = Signature.getInstance("SHA256withRSA");
-        PublicKey pubKey = keyFactory.generatePublic(publicKeySpec);
-        sig.initVerify(pubKey);
-        sig.update(requestBody.getBytes(StandardCharsets.UTF_8));
-        return sig.verify(Base64.getDecoder().decode(signature));
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
+        return (RSAPrivateKey) keyFactory.generatePrivate(keySpec);
     }
 
-    public static void main(String[] args) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException, SignatureException, InvalidKeyException {
-        //System.out.println(Cryptic.sign("Hello"));
-        //String sign = "VkXnwY2BZnTxOwZR4/RA39jv003Q81K05o9+9+5LmzBl2khm1fHsCdBKVMAImQfw9HO2VCO8YT56lMygOQbOtq9tMd+xuemwkt126lVyLnSYyfQWe1yrAmBMuncsUFC69vLDBgoIF/H9qSohZr02m0NAXNhcVxt50wpK24WCZhMdJRQIK1oLLEAaHROeJ4rN3x9a964QEuV9v7wXp8lA3oMN4pRV+DjyTuXmDOBMczz6ZksxW0Um4GzW7fRMCJBGwQIAc0vIKeFeQURvsQF2DJm7dUNUI5AKKf02JQh5iUrwzkQq2S08Jj8Ijk7ZJY7eai+M8krc2jLJHgapJVFAUw==";
-        //System.out.println(Cryptic.verify("Hello",sign));
+    public static RSAPublicKey readPublicKey(File file) throws Exception {
+        String key = new String(Files.readAllBytes(file.toPath()), Charset.defaultCharset());
 
-        /*String req = "b3JkZXJfaWQ6MTAyNzt0cmlwX2lkOjIwMDA7c2NoZWR1bGVfaWQ6OTAwO2RvajoyMDIxLTEyLTE0O29yaV9zdG9wOjEwMTtkZXN0X3N0b3A6MTAyO25vOjI7Y3JlYXRlZDpUdWUgRGVjIDE0IDExOjIwOjQ0IElTVCAyMDIxO2JvYXRfaWQ6NDAwO3NpZ25hdHVyZTpWRWtJR1VTeUZnR3hMZkpVVVF6MDRSTFEzYkNKWDVyZXRtbG0rQ1NsOWMxSDZiOFFIVU1sbm5TZlVDV2RNMGlyS3hVczlFUjlHUk1hMkdIL0VtVmp5MUR2d1dQK1RnMUQwU3BYaXJmT1dmZ1BtYm1hMS9OeXRWaVRRb2JLN0FvcFFJbG9QU1p6V0lONEZ1OHFTTXFhU2l4b2NCMWZBSXRpOGhKV3hrYTUzeFB4NjVNRWdhdk5OZUxxdE1oSVJ3blJrVmVOVWdHdWNVdmJnZ3FwS1BFWEs1NVBaR2Q3SlhkeXpLalhQclVPdUNKMHdmdDl3aStRcHpiVFdqa1U1QzR1Zm5vMEN0dWVwNXdhYktqK2FSRTd2eUw5TFFrQmJ4ampLa0VqQkFHbUNoRGZNczdLbDVyNEs0c21XMTl3d2JlQzRwT1pTNnFaS3hhQ3R1aGJUTldldlE9PQ==";
-        byte[] dec = Base64.getDecoder().decode(req);*/
+        String publicKeyPEM = key
+                .replace("-----BEGIN PUBLIC KEY-----", "")
+                .replaceAll(System.lineSeparator(), "")
+                .replace("\n", "")
+                .replace("-----END PUBLIC KEY-----", "");
 
-        //String re = "order_id:1028;trip_id:2000;schedule_id:900;doj:2021-12-14;ori_stop:101;dest_stop:102;no:2;created:Tue Dec 14 11:20:44 IST 2021;boat_id:400;";
-        //String sign = "VEkIGUSyFgGxLfJUUQz04RLQ3bCJX5retmlm+CSl9c1H6b8QHUMlnnSfUCWdM0irKxUs9ER9GRMa2GH/EmVjy1DvwWP+Tg1D0SpXirfOWfgPmbma1/NytViTQobK7AopQIloPSZzWIN4Fu8qSMqaSixocB1fAIti8hJWxka53xPx65MEgavNNeLqtMhIRwnRkVeNUgGucUvbggqpKPEXK55PZGd7JXdyzKjXPrUOuCJ0wft9wi+QpzbTWjkU5C4ufno0Ctuep5wabKj+aRE7vyL9LQkBbxjjKkEjBAGmChDfMs7Kl5r4K4smW19wwbeC4pOZS6qZKxaCtuhbTNWevQ==";
+        byte[] encoded = Base64.getDecoder().decode(publicKeyPEM);
 
-        //System.out.println(Cryptic.verify(re,sign));
-
-        String reBody="b3JkZXJfaWQ6MTAyNzt0cmlwX2lkOjIwMDA7c2NoZWR1bGVfaWQ6OTAwO2RvajoyMDIxLTEyLTE0O29yaV9zdG9wOjEwMTtkZXN0X3N0b3A6MTAyO25vOjI7Y3JlYXRlZDpUdWUgRGVjIDE0IDExOjIwOjQ0IElTVCAyMDIxO2JvYXRfaWQ6NDAwO3NpZ25hdHVyZTpWRWtJR1VTeUZnR3hMZkpVVVF6MDRSTFEzYkNKWDVyZXRtbG0rQ1NsOWMxSDZiOFFIVU1sbm5TZlVDV2RNMGlyS3hVczlFUjlHUk1hMkdIL0VtVmp5MUR2d1dQK1RnMUQwU3BYaXJmT1dmZ1BtYm1hMS9OeXRWaVRRb2JLN0FvcFFJbG9QU1p6V0lONEZ1OHFTTXFhU2l4b2NCMWZBSXRpOGhKV3hrYTUzeFB4NjVNRWdhdk5OZUxxdE1oSVJ3blJrVmVOVWdHdWNVdmJnZ3FwS1BFWEs1NVBaR2Q3SlhkeXpLalhQclVPdUNKMHdmdDl3aStRcHpiVFdqa1U1QzR1Zm5vMEN0dWVwNXdhYktqK2FSRTd2eUw5TFFrQmJ4ampLa0VqQkFHbUNoRGZNczdLbDVyNEs0c21XMTl3d2JlQzRwT1pTNnFaS3hhQ3R1aGJUTldldlE9PQ==";
-        byte[] dec = Base64.getDecoder().decode(reBody);
-        String decodedString = new String(dec);
-        System.out.println(decodedString);
-
-        // order_id:1027;trip_id:2000;schedule_id:900;doj:2021-12-14;ori_stop:101;dest_stop:102;no:2;created:Tue Dec 14 11:20:44 IST 2021;boat_id:400;signature:VEkIGUSyFgGxLfJUUQz04RLQ3bCJX5retmlm+CSl9c1H6b8QHUMlnnSfUCWdM0irKxUs9ER9GRMa2GH/EmVjy1DvwWP+Tg1D0SpXirfOWfgPmbma1/NytViTQobK7AopQIloPSZzWIN4Fu8qSMqaSixocB1fAIti8hJWxka53xPx65MEgavNNeLqtMhIRwnRkVeNUgGucUvbggqpKPEXK55PZGd7JXdyzKjXPrUOuCJ0wft9wi+QpzbTWjkU5C4ufno0Ctuep5wabKj+aRE7vyL9LQkBbxjjKkEjBAGmChDfMs7Kl5r4K4smW19wwbeC4pOZS6qZKxaCtuhbTNWevQ==
-
-        String re = "order_id:1027;trip_id:2000;schedule_id:900;doj:2021-12-14;ori_stop:101;dest_stop:102;no:2;created:Tue Dec 14 11:20:44 IST 2021;boat_id:400";
-        String sign = "VEkIGUSyFgGxLfJUUQz04RLQ3bCJX5retmlm+CSl9c1H6b8QHUMlnnSfUCWdM0irKxUs9ER9GRMa2GH/EmVjy1DvwWP+Tg1D0SpXirfOWfgPmbma1/NytViTQobK7AopQIloPSZzWIN4Fu8qSMqaSixocB1fAIti8hJWxka53xPx65MEgavNNeLqtMhIRwnRkVeNUgGucUvbggqpKPEXK55PZGd7JXdyzKjXPrUOuCJ0wft9wi+QpzbTWjkU5C4ufno0Ctuep5wabKj+aRE7vyL9LQkBbxjjKkEjBAGmChDfMs7Kl5r4K4smW19wwbeC4pOZS6qZKxaCtuhbTNWevQ==";
-
-        System.out.println(Cryptic.verify(re,sign));
-
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(encoded);
+        return (RSAPublicKey) keyFactory.generatePublic(publicKeySpec);
     }
 }
