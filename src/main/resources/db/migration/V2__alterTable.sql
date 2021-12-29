@@ -1,0 +1,1 @@
+ALTER TABLE sales_records MODIFY signature VARCHAR(1000);
