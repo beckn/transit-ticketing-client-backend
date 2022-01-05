@@ -37,6 +37,7 @@ import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TicketBookingServicesImpl implements TicketBookingServices {
@@ -60,10 +61,13 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
     @Autowired
     StopTimesRespository stopTimesRespository;
 
-    @Value( "${app.security.key}" )
+    @Autowired
+    StopsRepository stopsRepository;
+
+    @Value("${app.security.key}")
     private String key;
 
-    @Value( "${app.security.iv}" )
+    @Value("${app.security.iv}")
     private String iv;
 
     @Override
@@ -71,36 +75,41 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
     public ResponseEntity<BlockTicketResponseDto> blockTicket(BlockTicketRequestDto blockTicketRequestDto) throws ETicketingException {
         try {
             // Validation
-            if(blockTicketRequestDto.getSeats()<=0) throw new ETicketingException("Please provide seat number greater than 0 to proceed");
+            if (blockTicketRequestDto.getSeats() <= 0)
+                throw new ETicketingException("Please provide seat number greater than 0 to proceed");
             // Validation
             validateMandFields(blockTicketRequestDto);
             long source = Long.parseLong(blockTicketRequestDto.getSource());
             long destination = Long.parseLong(blockTicketRequestDto.getDestination());
             long tripId = Long.parseLong(blockTicketRequestDto.getTrip_id());
             String journeyDate = blockTicketRequestDto.getDate();
-            TripInventory tripInventory = inventoryRepository.findTripsForGivenSourceAndDestinationAndTripId(blockTicketRequestDto.getSource(),blockTicketRequestDto.getDestination(),journeyDate,tripId);
-            if(tripInventory==null)throw new ETicketingException("System couldn't find given trip_id in inventory table.");
-            int sourceStopSeq = inventoryRepository.findStopSequence(tripId,journeyDate,blockTicketRequestDto.getSource());
-            int destinationStopSeq = inventoryRepository.findStopSequence(tripId,journeyDate,blockTicketRequestDto.getDestination());
+            TripInventory tripInventory = inventoryRepository.findTripsForGivenSourceAndDestinationAndTripId(blockTicketRequestDto.getSource(), blockTicketRequestDto.getDestination(), journeyDate, tripId);
+            if (tripInventory == null)
+                throw new ETicketingException("System couldn't find given trip_id in inventory table.");
+            int sourceStopSeq = inventoryRepository.findStopSequence(tripId, journeyDate, blockTicketRequestDto.getSource());
+            int destinationStopSeq = inventoryRepository.findStopSequence(tripId, journeyDate, blockTicketRequestDto.getDestination());
             Date journeyDateInDateFormat = new SimpleDateFormat(ETicketingConstant.DATEFORMAT).parse(journeyDate);
             TripsInSchedule tripsInSchedule = tripInScheduleRepository.findByTripId(tripId);
-            if(tripsInSchedule==null)throw new ETicketingException("System couldn't find schedule_id for given trip_id="+tripId);
+            if (tripsInSchedule == null)
+                throw new ETicketingException("System couldn't find schedule_id for given trip_id=" + tripId);
             long scheduleId = tripsInSchedule.getScheduleId();
             ScheduledJourney scheduledJourney = scheduledJourneyRepository.fetchScheduled(scheduleId, journeyDate);
-            if(scheduledJourney == null)throw new ETicketingException("System couldn't find any scheduled journey for trip_id="+tripId);
+            if (scheduledJourney == null)
+                throw new ETicketingException("System couldn't find any scheduled journey for trip_id=" + tripId);
             Boats boats = boatsRepository.findByBoat_id(scheduledJourney.getBoatId());
-            if(boats==null)throw new ETicketingException("No boats found for given scheduled journey");
+            if (boats == null) throw new ETicketingException("No boats found for given scheduled journey");
             int maxCapacity = boats.getCapacity();
             //List<SalesRecords> salesRecords = salesRecordsRepository.issuesTicketsCount(source,tripId,boats.getBoat_id(),scheduleId,journeyDate);
             // Get issues tickets count
-            int issued = inventoryRepository.findIssuedTickets(tripId,journeyDate,sourceStopSeq,destinationStopSeq);
+            int issued = inventoryRepository.findIssuedTickets(tripId, journeyDate, sourceStopSeq, destinationStopSeq);
             /*for(SalesRecords record: salesRecords){
                 issued = issued + record.getNumber_of_tickets();
             }*/
-            int availableTickets  = maxCapacity - issued;
-            if(availableTickets < blockTicketRequestDto.getSeats()) throw new ETicketingException("Less tickets are available. Wont proceed with blocking tickets");
+            int availableTickets = maxCapacity - issued;
+            if (availableTickets < blockTicketRequestDto.getSeats())
+                throw new ETicketingException("Less tickets are available. Wont proceed with blocking tickets");
             // get fare attribute for a ticket
-            FareRules fareRules = fareRulesRepository.findByOrigin_idAndDestination_id(source,destination);
+            FareRules fareRules = fareRulesRepository.findByOrigin_idAndDestination_id(source, destination);
             FareAttributes fareAttributes = fareAttributesRepository.findByFareId(fareRules.getFare_id());
 
             long amountPaid = fareAttributes.getPrice() * blockTicketRequestDto.getSeats();
@@ -123,22 +132,28 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
             SalesRecords saved = salesRecordsRepository.save(record);
             //UPDATE issued tickets
 
-            int rowsEffected = inventoryRepository.updateIssuedTicketCount(tripId,journeyDate,sourceStopSeq,destinationStopSeq,blockTicketRequestDto.getSeats());
-            if(rowsEffected==0) throw new ETicketingException("System failed to update issued ticket count");
+            int rowsEffected = inventoryRepository.updateIssuedTicketCount(tripId, journeyDate, sourceStopSeq, destinationStopSeq, blockTicketRequestDto.getSeats());
+            if (rowsEffected == 0) throw new ETicketingException("System failed to update issued ticket count");
+
+            //Get stop names from stop id that will be used in signature
+
+            Optional<Stops> originStop = stopsRepository.findById(source);
+            Optional<Stops> desStop = stopsRepository.findById(destination);
+
             //Update signature in sales record
-            String signature = "order_id:"+saved.getOrder_id()+";trip_id:"+tripId+";schedule_id:"+scheduleId+";doj:"+journeyDate+";ori_stop:"+source+";dest_stop:"+destination+";no:"+ blockTicketRequestDto.getSeats()+";created:"+new Date()+";boat_id:"+boats.getBoat_id();
+            String signature = "order_id:" + saved.getOrder_id() + ";trip_id:" + tripId + ";schedule_id:" + scheduleId + ";doj:" + journeyDate + ";ori_stop:" + originStop.get().getStopName() + ";dest_stop:" + desStop.get().getStopName() + ";no:" + blockTicketRequestDto.getSeats() + ";created:" + new Date() + ";boat_id:" + boats.getBoat_id() + ";base_fare:" + fareAttributes.getPrice()+";slot:"+ blockTicketRequestDto.getSlot().replace(":","");
             String encryptedSign = "";
-            try{
-                encryptedSign = signature+";signature:"+Cryptic.sign(signature);
+            try {
+                encryptedSign = signature + ";signature:" + Cryptic.sign(signature);
                 encryptedSign = Base64.getEncoder().encodeToString(encryptedSign.getBytes(StandardCharsets.UTF_8));
-            }catch (Exception e){
+            } catch (Exception e) {
                 // Ignore exception
-                LOG.error("Error occurred while signing: "+e.getMessage());
+                LOG.error("Error occurred while signing: " + e.getMessage());
             }
 
-            salesRecordsRepository.setSignatureForSalesRecords(encryptedSign,saved.getOrder_id());
+            salesRecordsRepository.setSignatureForSalesRecords(encryptedSign, saved.getOrder_id());
 
-            StopTimes stopTimes=stopTimesRespository.findStopTimeForStopIdAndTripId(source,tripId);
+            StopTimes stopTimes = stopTimesRespository.findStopTimeForStopIdAndTripId(source, tripId);
 
             SimpleDateFormat localTimeFormat = new SimpleDateFormat(ETicketingConstant.TIMEFORMAT);
             //localTimeFormat.setTimeZone(timeZone);
@@ -155,10 +170,10 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
             DepartureDto departureDto = new DepartureDto();
             departureDto.setStopId(String.valueOf(source));
             departureDto.setSlot(time);
-            departureDto.setTimestamp(journeyDate+"T"+departureTimePart);
+            departureDto.setTimestamp(journeyDate + "T" + departureTimePart);
 
 
-            StopTimes stopTimesDestination=stopTimesRespository.findStopTimeForStopIdAndTripId(destination,tripId);
+            StopTimes stopTimesDestination = stopTimesRespository.findStopTimeForStopIdAndTripId(destination, tripId);
 
             String arrivalTimePart = sdfForTimePart.format(stopTimesDestination.getArrivalTime());
             String timeDestination = localTimeFormat.format(stopTimesDestination.getArrivalTime());
@@ -166,7 +181,7 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
             ArrivalDto arrivalDto = new ArrivalDto();
             arrivalDto.setStopId(String.valueOf(destination));
             arrivalDto.setSlot(timeDestination);
-            arrivalDto.setTimestamp(journeyDate+"T"+arrivalTimePart);
+            arrivalDto.setTimestamp(journeyDate + "T" + arrivalTimePart);
 
             // Return ticket details
 
@@ -207,7 +222,7 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
             return ResponseEntity.ok(blockTicketResponseDto);
         } catch (ParseException | ETicketingException e) {
             throw new ETicketingException(e);
-        } catch (NumberFormatException nfe ){
+        } catch (NumberFormatException nfe) {
             throw new ETicketingException("Please provide valid input for blocking tickets");
         } finally {
 
@@ -215,7 +230,8 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
     }
 
     private void validateMandFields(BlockTicketRequestDto blockTicketRequestDto) throws ETicketingException {
-        if(Strings.isEmpty(blockTicketRequestDto.getTrip_id()) || Strings.isEmpty(blockTicketRequestDto.getDestination()) || Strings.isEmpty(blockTicketRequestDto.getSource()) || Strings.isEmpty(blockTicketRequestDto.getDate()))throw new ETicketingException("Please provide mandatory fields to block tickets");
+        if (Strings.isEmpty(blockTicketRequestDto.getTrip_id()) || Strings.isEmpty(blockTicketRequestDto.getDestination()) || Strings.isEmpty(blockTicketRequestDto.getSource()) || Strings.isEmpty(blockTicketRequestDto.getDate()))
+            throw new ETicketingException("Please provide mandatory fields to block tickets");
     }
 
     @Override
@@ -223,8 +239,8 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
     public ResponseEntity<BookTicketResponseDto> bookTicket(BookTicketRequestDto bookTicketRequestDto) throws ETicketingException {
         // Step 1 : Check if order id exists
         long orderId = Long.parseLong(bookTicketRequestDto.getTicketNumber());
-        SalesRecords records=salesRecordsRepository.findSalesRecordsWithOrderId(orderId);
-        if(records==null)throw new ETicketingException("No sales record found for given order id="+orderId);
+        SalesRecords records = salesRecordsRepository.findSalesRecordsWithOrderId(orderId);
+        if (records == null) throw new ETicketingException("No sales record found for given order id=" + orderId);
 
         BookTicketResponseDto bookTicketResponseDto = new BookTicketResponseDto();
         bookTicketResponseDto.setTicketNumber(bookTicketRequestDto.getTicketNumber());
@@ -239,7 +255,7 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
 
         // Step 2: Get payment details
         PaymentsDetails paymentsDetails = paymentDetailsRepository.findPaymentDetailsForOrderId(orderId);
-        if(bookTicketRequestDto.getPaymentType().equalsIgnoreCase("CASH")){
+        if (bookTicketRequestDto.getPaymentType().equalsIgnoreCase("CASH")) {
             paymentsDetails = new PaymentsDetails();
             paymentsDetails.setPayment_link("");
             paymentsDetails.setPayment_method("CASH");
@@ -247,29 +263,29 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
             paymentsDetails.setTransaction_id(1111);
             paymentsDetails.setPayment_status("SUCCESS");
             paymentDetailsRepository.save(paymentsDetails);
-            salesRecordsRepository.setStatusForSalesRecords(ETicketingConstant.SUCCESS,orderId);
+            salesRecordsRepository.setStatusForSalesRecords(ETicketingConstant.SUCCESS, orderId);
             bookTicketResponseDto.setCardPaymentDetailsDto(cardPaymentDetailsDto);
             bookTicketResponseDto.setUpiPaymentDetailsDto(upiPaymentDetailsDto);
             return ResponseEntity.ok(bookTicketResponseDto);
         }
         if (paymentsDetails == null) throw new ETicketingException("No Payment details found.");
 
-        if(bookTicketRequestDto.getPaymentType().equalsIgnoreCase("CARD") && paymentsDetails.getPayment_method().equalsIgnoreCase("CARD")){
+        if (bookTicketRequestDto.getPaymentType().equalsIgnoreCase("CARD") && paymentsDetails.getPayment_method().equalsIgnoreCase("CARD")) {
             //if(paymentsDetails==null)
-            if(paymentsDetails.getPayment_status().equalsIgnoreCase("SUCCESS")){
-                salesRecordsRepository.setStatusForSalesRecords(ETicketingConstant.SUCCESS,orderId);
+            if (paymentsDetails.getPayment_status().equalsIgnoreCase("SUCCESS")) {
+                salesRecordsRepository.setStatusForSalesRecords(ETicketingConstant.SUCCESS, orderId);
                 cardPaymentDetailsDto.setReferenceNo(String.valueOf(paymentsDetails.getTransaction_id()));
             }
-        }else {
+        } else {
             throw new ETicketingException("Given payment mode doesn't match with payment details records.");
         }
-        if(bookTicketRequestDto.getPaymentType().equalsIgnoreCase("UPI") && paymentsDetails.getPayment_method().equalsIgnoreCase("UPI")){
+        if (bookTicketRequestDto.getPaymentType().equalsIgnoreCase("UPI") && paymentsDetails.getPayment_method().equalsIgnoreCase("UPI")) {
             //if(paymentsDetails==null)
-            if(paymentsDetails.getPayment_status().equalsIgnoreCase("SUCCESS")){
-                salesRecordsRepository.setStatusForSalesRecords(ETicketingConstant.SUCCESS,orderId);
+            if (paymentsDetails.getPayment_status().equalsIgnoreCase("SUCCESS")) {
+                salesRecordsRepository.setStatusForSalesRecords(ETicketingConstant.SUCCESS, orderId);
                 upiPaymentDetailsDto.setReferenceNo(String.valueOf(paymentsDetails.getTransaction_id()));
             }
-        }else {
+        } else {
             throw new ETicketingException("Given payment mode doesn't match with payment details records.");
         }
 
