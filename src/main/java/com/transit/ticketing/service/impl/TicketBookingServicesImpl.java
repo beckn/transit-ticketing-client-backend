@@ -3,6 +3,7 @@ package com.transit.ticketing.service.impl;
 import antlr.StringUtils;
 import com.transit.ticketing.cipher.AESUtil;
 import com.transit.ticketing.cipher.Cryptic;
+import com.transit.ticketing.cipher.Cryptic2;
 import com.transit.ticketing.constants.ETicketingConstant;
 import com.transit.ticketing.controller.SecureController;
 import com.transit.ticketing.dto.*;
@@ -69,6 +70,9 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
 
     @Value("${app.security.iv}")
     private String iv;
+
+    @Value("${app.security.private_key}")
+    private String privateKey;
 
     @Override
     @Transactional
@@ -144,7 +148,8 @@ public class TicketBookingServicesImpl implements TicketBookingServices {
             String signature = "order_id:" + saved.getOrder_id() + ";trip_id:" + tripId + ";schedule_id:" + scheduleId + ";doj:" + journeyDate + ";ori_stop:" + originStop.get().getStopName() + ";dest_stop:" + desStop.get().getStopName() + ";no:" + blockTicketRequestDto.getSeats() + ";created:" + new Date() + ";boat_id:" + boats.getBoat_id() + ";base_fare:" + fareAttributes.getPrice()+";slot:"+ blockTicketRequestDto.getSlot().replace(":","");
             String encryptedSign = "";
             try {
-                encryptedSign = signature + ";signature:" + Cryptic.sign(signature);
+                Cryptic2 cryptic2 = new Cryptic2();
+                encryptedSign = signature + ";signature:" + cryptic2.sign(privateKey,signature);
                 encryptedSign = Base64.getEncoder().encodeToString(encryptedSign.getBytes(StandardCharsets.UTF_8));
             } catch (Exception e) {
                 // Ignore exception
