@@ -16,11 +16,8 @@ public class Staff {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long staff_id;
-    @Column
     private String staff_name;
-    @Column
     private long station_id;
-    @Column
     private String role;
 
 }

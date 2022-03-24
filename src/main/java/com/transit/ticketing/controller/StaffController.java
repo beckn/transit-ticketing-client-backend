@@ -28,9 +28,9 @@ public class StaffController {
         return ResponseEntity.ok(staffService.createStaff(staff));
     }
 
-    @GetMapping(value="/api/v1/secure/staffs?page={pageNo}&records={numberOfRecords}")
-    public ResponseEntity<Page<Staff>> listAllStaff(@PathVariable int pageNo, @PathVariable int numberOfRecords) {
-        return ResponseEntity.ok().body(staffService.listAllStaff(pageNo, numberOfRecords));
+    @GetMapping(value="/api/v1/secure/staffs/page={page}&records={records}")
+    public ResponseEntity<Page<Staff>> listAllStaff(@PathVariable int page, @PathVariable int records) {
+        return ResponseEntity.ok().body(staffService.listAllStaff(page, records));
     }
 
     @GetMapping(value="/api/v1/secure/staff/role={role}")
