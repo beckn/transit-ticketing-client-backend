@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -40,9 +39,8 @@ public class StaffService {
         return staffRepository.save(staff);
     }
 
-    public Page<Staff> listAllStaff(int pageNo, int numberOfRecords) {
-        return staffRepository.findAll(
-                PageRequest.of(pageNo, numberOfRecords));
+    public List<Staff> listAllStaff() {
+        return staffRepository.findAll();
 
     }
 
@@ -50,4 +48,8 @@ public class StaffService {
         return staffRepository.findByRole(role);
     }
 
+    public Page<Staff> listAllStaffWithPagination(int pageNo, int numberOfRecords) {
+        return staffRepository.findAll(
+                PageRequest.of(pageNo, numberOfRecords));
+    }
 }
