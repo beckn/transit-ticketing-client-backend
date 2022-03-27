@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Entity
 @Table(name="boats")
@@ -19,5 +20,14 @@ public class Boats {
     private long station_id;
     @Column
     boolean active;
-
+    @Column
+    Date purchase_dt;
+    @Column
+    String boat_reg_no;
+    @Column
+    Date last_service_dt;
+    @Column
+    Date new_service_dt;
+    @Column
+    String remarks;
 }
