@@ -17,4 +17,8 @@ public class TripsInSchedule {
     private long scheduleId;
     @Column(name = "trip_id")
     private long tripId;
+    @OneToOne
+    @JoinColumn(name = "schedule_id" , referencedColumnName = "schedule_id", insertable = false, updatable = false)
+    private ScheduledJourney scheduledJourney;
+
 }

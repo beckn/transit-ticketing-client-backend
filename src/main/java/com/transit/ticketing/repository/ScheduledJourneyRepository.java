@@ -11,4 +11,10 @@ import java.util.List;
 public interface ScheduledJourneyRepository extends JpaRepository<ScheduledJourney,Long> {
     @Query(value = "select * from scheduled_journey where schedule_id = ?1",nativeQuery = true)
     ScheduledJourney fetchScheduled(long scheduledId, String jouneyDate);
+
+    @Query(value = "select * from scheduled_journey where boat_id = ?1",nativeQuery = true)
+    List<ScheduledJourney> fetchScheduleBoat(long boatId);
+
+    @Query(value = "select * from scheduled_journey",nativeQuery = true)
+    List<ScheduledJourney> fetchAllScheduleBoats();
 }
