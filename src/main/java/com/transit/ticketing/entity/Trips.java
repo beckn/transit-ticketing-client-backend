@@ -19,4 +19,7 @@ public class Trips {
     private long service_id;
     @Column
     private String trip_headsign;
+    @OneToOne
+    @JoinColumn(name = "trip_id" , referencedColumnName = "trip_id", insertable = false, updatable = false)
+    private TripsInSchedule tripsInSchedule;
 }

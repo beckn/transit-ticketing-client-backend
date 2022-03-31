@@ -21,4 +21,7 @@ public class Stops {
     private String stopLon;
     @Column(name = "station_id")
     private long stationId;
+    @OneToOne
+    @JoinColumn(name = "stop_id" , referencedColumnName = "stop_id", insertable = false, updatable = false)
+    private StopsInRoute stopsInRoute;
 }
