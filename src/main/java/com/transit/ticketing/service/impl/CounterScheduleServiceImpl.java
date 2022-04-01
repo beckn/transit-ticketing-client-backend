@@ -2,8 +2,11 @@ package com.transit.ticketing.service.impl;
 
 import com.transit.ticketing.dto.BoatScheduleResponseDto;
 import com.transit.ticketing.entity.ScheduledJourney;
+import com.transit.ticketing.entity.StopTimes;
 import com.transit.ticketing.entity.Stops;
 import com.transit.ticketing.exception.ETicketingException;
+import com.transit.ticketing.repository.ScheduledJourneyRepository;
+import com.transit.ticketing.repository.StopTimesRespository;
 import com.transit.ticketing.repository.StopsRepository;
 import com.transit.ticketing.service.CounterScheduleService;
 import org.slf4j.Logger;
@@ -20,6 +23,10 @@ public class CounterScheduleServiceImpl implements CounterScheduleService {
     private static final Logger LOG = LoggerFactory.getLogger(CounterScheduleServiceImpl.class);
     @Autowired
     StopsRepository stopsRepository;
+    @Autowired
+    StopTimesRespository stopTimesRespository;
+    @Autowired
+    ScheduledJourneyRepository scheduledJourneyRepository;
 
     @Override
     public ResponseEntity<List<BoatScheduleResponseDto>> findCounterSchedule(long counterId) throws ETicketingException {
@@ -29,8 +36,22 @@ public class CounterScheduleServiceImpl implements CounterScheduleService {
 
     @Override
     public ResponseEntity<List<BoatScheduleResponseDto>> findAllCountersSchedule() throws ETicketingException {
-        List<Stops> scheduleList = stopsRepository.findAllStops();
-        return ResponseEntity.ok(new ArrayList<>());
+        List<Stops> counterStopList = stopsRepository.findAllCounterStops();
+        List<StopTimes> stopTimesForStopList = new ArrayList<>();
+        for(Stops stops: counterStopList){
+            List<StopTimes> stopTimes = stopTimesRespository.findAllByOriginStop(stops.getStop_id());
+            if(stopTimes.size()!=0)stopTimesForStopList.addAll(stopTimes);
+        }
+
+        List<ScheduledJourney> scheduledJourneys = new ArrayList<>();
+        // Step 1- get ScheduleJourney for the trip ids
+        for(StopTimes stopTimes: stopTimesForStopList){
+            scheduledJourneys.addAll(scheduledJourneyRepository.fetchAllScheduleJourneyForTrip(stopTimes.getTripId()));
+        }
+        //Prepare the response object by following steps
+        List<BoatScheduleResponseDto> boatScheduleResponseDtos = getScheduleForCounters(scheduledJourneys);
+
+        return ResponseEntity.ok(boatScheduleResponseDtos);
     }
 
     private List<BoatScheduleResponseDto> getScheduleForCounters(List<ScheduledJourney>  scheduleList) {

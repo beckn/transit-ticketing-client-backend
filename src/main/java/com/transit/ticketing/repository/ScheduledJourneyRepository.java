@@ -17,4 +17,7 @@ public interface ScheduledJourneyRepository extends JpaRepository<ScheduledJourn
 
     @Query(value = "select * from scheduled_journey",nativeQuery = true)
     List<ScheduledJourney> fetchAllScheduleBoats();
+
+    @Query(value = "select * from scheduled_journey where schedule_id in (select schedule_id from trips_in_schedule where trip_id = ?1) ",nativeQuery = true)
+    List<ScheduledJourney> fetchAllScheduleJourneyForTrip(long trip_id);
 }

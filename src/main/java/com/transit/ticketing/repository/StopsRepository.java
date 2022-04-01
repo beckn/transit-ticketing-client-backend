@@ -14,7 +14,7 @@ public interface StopsRepository extends JpaRepository<Stops,Long> {
     Stops findStopsByGPS(String stopLat,String stopLon);
 
     @Query(value = "SELECT * FROM stops where counter_present = 1",nativeQuery = true)
-    List<Stops> findAllStops();
+    List<Stops> findAllCounterStops();
 
     @Query(value = "SELECT * FROM stops where counter_present = 1 AND stop_id = ?1",nativeQuery = true)
     List<Stops> findStopsById(long stopId);
