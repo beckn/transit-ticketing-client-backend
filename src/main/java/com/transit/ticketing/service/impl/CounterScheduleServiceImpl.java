@@ -30,8 +30,22 @@ public class CounterScheduleServiceImpl implements CounterScheduleService {
 
     @Override
     public ResponseEntity<List<BoatScheduleResponseDto>> findCounterSchedule(long counterId) throws ETicketingException {
-        List<Stops> scheduleList = stopsRepository.findStopsById(counterId);
-        return ResponseEntity.ok(new ArrayList<>());
+        List<Stops> counterStopList = stopsRepository.findAllCounterStops();
+        List<StopTimes> stopTimesForStopList = new ArrayList<>();
+        for(Stops stops: counterStopList){
+            List<StopTimes> stopTimes = stopTimesRespository.findAllByOriginStop(stops.getStop_id());
+            if(stopTimes.size()!=0)stopTimesForStopList.addAll(stopTimes);
+        }
+
+        List<ScheduledJourney> scheduledJourneys = new ArrayList<>();
+        // Step 1- get ScheduleJourney for the trip ids
+        for(StopTimes stopTimes: stopTimesForStopList){
+            scheduledJourneys.addAll(scheduledJourneyRepository.fetchAllScheduleJourneyForTrip(stopTimes.getTripId()));
+        }
+        //Prepare the response object by following steps
+        List<BoatScheduleResponseDto> boatScheduleResponseDtos = getScheduleForCounters(scheduledJourneys);
+
+        return ResponseEntity.ok(boatScheduleResponseDtos);
     }
 
     @Override
