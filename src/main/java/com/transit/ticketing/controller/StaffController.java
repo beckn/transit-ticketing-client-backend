@@ -33,8 +33,10 @@ public class StaffController {
         return ResponseEntity.ok().body(staffService.listAllStaff());
     }
 
-    @GetMapping(value="/api/v1/secure/staffs/page={page}&records={records}")
-    public ResponseEntity<Page<Staff>> listAllStaffWithPagination(@PathVariable int page, @PathVariable int records) {
+    @GetMapping(value="/api/v1/secure/staffs?page={page}&records={records}")
+    public ResponseEntity<Page<Staff>> listAllStaffWithPagination(@RequestParam(defaultValue = "0") int page,
+                                                                  @RequestParam(defaultValue = "20") int records) {
+        LOG.info(String.valueOf(page));
         return ResponseEntity.ok().body(staffService.listAllStaffWithPagination(page, records));
     }
 
