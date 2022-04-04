@@ -40,7 +40,7 @@ public class AuthConfiguration extends WebSecurityConfigurerAdapter {
                 return authentication;
             }
         });
-        httpSecurity.cors().and().
+        httpSecurity.
             antMatcher("/api/v1/secure/*").
             csrf().disable().
             sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).
