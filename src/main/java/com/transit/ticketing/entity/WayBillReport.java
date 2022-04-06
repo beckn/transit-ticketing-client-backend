@@ -45,11 +45,11 @@ public class WayBillReport {
     @Column(name = "total_income", nullable = false)
     private Long totalIncome;
 
-    @OneToOne
+    @OneToMany
     @JoinColumn(name = "route_id" , referencedColumnName = "route_id", insertable = false, updatable = false)
     private Routes routes;
 
-    @OneToOne
+    @OneToMany
     @JoinColumn(name = "trip_id" , referencedColumnName = "trip_id", insertable = false, updatable = false)
     private Trips trips;
 
