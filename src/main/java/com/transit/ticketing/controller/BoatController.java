@@ -1,5 +1,6 @@
 package com.transit.ticketing.controller;
 
+import com.transit.ticketing.dto.BoatsDto;
 import com.transit.ticketing.entity.Boats;
 import com.transit.ticketing.exception.ETicketingException;
 import com.transit.ticketing.service.BoatService;
@@ -22,13 +23,13 @@ public class BoatController {
     BoatService boatService;
 
     @GetMapping(value = "/api/v1/secure/boats")
-    public ResponseEntity<List<Boats>> search() throws ETicketingException {
+    public ResponseEntity<List<BoatsDto>> search() throws ETicketingException {
         LOG.info("Received request: /api/v1/secure/boats");
         return ResponseEntity.ok().body(boatService.listAllBoats());
     }
 
     @GetMapping(value = "/api/v1/secure/boats/page={page}&records={records}")
-    public ResponseEntity<Page<Boats>> search(@PathVariable int page, @PathVariable int records) throws ETicketingException {
+    public ResponseEntity<List<BoatsDto>> search(@PathVariable int page, @PathVariable int records) throws ETicketingException {
         LOG.info("Received request: /api/v1/secure/boats/page={page}&records={records}", page, records);
         return ResponseEntity.ok().body(boatService.listAllBoats(page,records));
     }

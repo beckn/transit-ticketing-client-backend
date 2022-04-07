@@ -1,0 +1,1 @@
+update boats set last_service_dt = curdate(), new_service_dt=curdate(),boat_reg_no=1102,remarks='NEW' where boat_id>1

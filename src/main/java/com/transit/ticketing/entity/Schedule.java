@@ -20,4 +20,7 @@ public class Schedule {
     private Date end_date;
     @Column
     private int active;
+    @OneToOne
+    @JoinColumn(name = "schedule_id" , referencedColumnName = "schedule_id", insertable = false, updatable = false)
+    ScheduledJourney scheduledJourney;
 }

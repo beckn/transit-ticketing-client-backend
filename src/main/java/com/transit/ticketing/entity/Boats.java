@@ -30,4 +30,7 @@ public class Boats {
     Date new_service_dt;
     @Column
     String remarks;
+    @OneToOne
+    @JoinColumn(name = "station_id" , referencedColumnName = "station_id", insertable = false, updatable = false)
+    Stations stations;
 }
