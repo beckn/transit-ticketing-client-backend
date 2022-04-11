@@ -25,14 +25,15 @@ public class BoatScheduleController {
 
 	@RequestMapping(value = "/api/v1/secure/boat/schedules", method = RequestMethod.GET)
 	public ResponseEntity<List<BoatScheduleDto>> getBoatSchedules(@RequestParam(required = false) Long boatId) throws ETicketingException {
-		/*if(boatId == null) {
+		if(boatId == null) {
 			LOG.info("Received request: /api/v1/boat/schedules");
 			return boatScheduleService.findAllScheduleBoats();
 		}else
 			LOG.info("Received request: /api/v1/boat/schedules?boatId", boatId);
-		return boatScheduleService.findScheduleBoat(boatId);*/
+		return boatScheduleService.findScheduleBoat(boatId);
+		//return boatScheduleService.findScheduleBoat(boatId);
 
-		List<BoatScheduleDto> boatScheduleDtos = new ArrayList<>();
+		/*List<BoatScheduleDto> boatScheduleDtos = new ArrayList<>();
 		BoatScheduleDto boatScheduleDto = new BoatScheduleDto();
 		boatScheduleDto.setBoatNo("1102");
 		boatScheduleDto.setBoatMasterName("Navjeet Singh");
@@ -52,7 +53,7 @@ public class BoatScheduleController {
 		boatScheduleDtos.add(boatScheduleDto);
 		boatScheduleDtos.add(boatScheduleDto2);
 
-		return ResponseEntity.ok().body(boatScheduleDtos);
+		return ResponseEntity.ok().body(boatScheduleDtos);*/
 	}
 
 }

@@ -1,17 +1,19 @@
 package com.transit.ticketing.entity;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.rest.core.annotation.RestResource;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.Date;
 
 @Entity
 @Table(name = "scheduled_journey")
 @Data
 @NoArgsConstructor
-public class ScheduledJourney {
+public class ScheduledJourney implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;

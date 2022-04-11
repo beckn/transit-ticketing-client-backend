@@ -1,11 +1,11 @@
 package com.transit.ticketing.service.impl;
 
+import com.transit.ticketing.constants.ETicketingConstant;
+import com.transit.ticketing.dto.BoatScheduleDto;
 import com.transit.ticketing.dto.BoatScheduleResponseDto;
 import com.transit.ticketing.entity.*;
 import com.transit.ticketing.exception.ETicketingException;
-import com.transit.ticketing.repository.BoatsRepository;
-import com.transit.ticketing.repository.ScheduleRepository;
-import com.transit.ticketing.repository.ScheduledJourneyRepository;
+import com.transit.ticketing.repository.*;
 import com.transit.ticketing.service.BoatScheduleService;
 import com.transit.ticketing.service.ScheduledTask;
 import org.slf4j.Logger;
@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
@@ -23,16 +24,93 @@ public class BoatScheduleServiceImpl implements BoatScheduleService {
     @Autowired
     ScheduledJourneyRepository scheduleJourneyRepository;
 
+    @Autowired
+    BoatsRepository boatsRepository;
+
+    @Autowired
+    TripInScheduleRepository tripInScheduleRepository;
+
+    @Autowired
+    StopTimesRespository stopTimesRespository;
+
+    @Autowired
+    StopsRepository stopsRepository;
+
     @Override
-    public ResponseEntity<List<BoatScheduleResponseDto>> findScheduleBoat(Long boatId) throws ETicketingException {
+    public ResponseEntity<List<BoatScheduleDto>> findScheduleBoat(Long boatId) throws ETicketingException {
         List<ScheduledJourney> scheduleList = scheduleJourneyRepository.fetchScheduleBoat(boatId);
-        return ResponseEntity.ok(getScheduleForBoat(scheduleList));
+        List<BoatScheduleDto> boatScheduleDtos = new ArrayList<>();
+        for(ScheduledJourney scheduledJourney:scheduleList){
+            BoatScheduleDto boatScheduleDto = new BoatScheduleDto();
+            //Boat mastername can be fetched from relation to staff
+            boatScheduleDto.setBoatMasterName(scheduledJourney.getBoatmaster().getStaff_name());
+            long boat_id = scheduledJourney.getBoatId();
+            //Boat info can be found from boat id present on schedule journey
+            Boats boats = boatsRepository.findByBoat_id(boat_id);
+            boatScheduleDto.setBoatNo(boats.getBoat_reg_no());
+            // In order to get start time, endtime,start loc , end location we need to check stop times table
+            //Get trip id from schedule id from trips in schedule table
+            TripsInSchedule tripsInSchedule = tripInScheduleRepository.findByScheduleId(scheduledJourney.getScheduledId());
+            long trip_id = tripsInSchedule.getTripId();
+            List<StopTimes> stopTimes = stopTimesRespository.findAllByTripId(trip_id);
+            StopTimes origin = stopTimes.get(0);
+            StopTimes destination = stopTimes.get(stopTimes.size()-1);
+
+            SimpleDateFormat localTimeFormat = new SimpleDateFormat(ETicketingConstant.TIMEFORMAT);
+            //localTimeFormat.setTimeZone(timeZone);
+            String startTime = localTimeFormat.format(origin.getDepartureTime());
+            String endTime = localTimeFormat.format(destination.getArrivalTime());
+
+            Stops originStop = stopsRepository.findById(origin.getStopId()).get();
+            Stops destinationStop = stopsRepository.findById(destination.getStopId()).get();
+
+            boatScheduleDto.setStartTime(startTime);
+            boatScheduleDto.setStartLocation(originStop.getStopName());
+            boatScheduleDto.setEndTime(endTime);
+            boatScheduleDto.setEndLocation(destinationStop.getStopName());
+
+            boatScheduleDtos.add(boatScheduleDto);
+        }
+        return ResponseEntity.ok(boatScheduleDtos);
     }
 
     @Override
-    public ResponseEntity<List<BoatScheduleResponseDto>> findAllScheduleBoats() throws ETicketingException {
+    public ResponseEntity<List<BoatScheduleDto>> findAllScheduleBoats() throws ETicketingException {
         List<ScheduledJourney> scheduleList = scheduleJourneyRepository.fetchAllScheduleBoats();
-        return ResponseEntity.ok(getScheduleForBoat(scheduleList));
+        // For each schedulejourney form the response dto
+        List<BoatScheduleDto> boatScheduleDtos = new ArrayList<>();
+        for(ScheduledJourney scheduledJourney:scheduleList){
+            BoatScheduleDto boatScheduleDto = new BoatScheduleDto();
+            //Boat mastername can be fetched from relation to staff
+            boatScheduleDto.setBoatMasterName(scheduledJourney.getBoatmaster().getStaff_name());
+            long boat_id = scheduledJourney.getBoatId();
+            //Boat info can be found from boat id present on schedule journey
+            Boats boats = boatsRepository.findByBoat_id(boat_id);
+            boatScheduleDto.setBoatNo(boats.getBoat_reg_no());
+            // In order to get start time, endtime,start loc , end location we need to check stop times table
+            //Get trip id from schedule id from trips in schedule table
+            TripsInSchedule tripsInSchedule = tripInScheduleRepository.findByScheduleId(scheduledJourney.getScheduledId());
+            long trip_id = tripsInSchedule.getTripId();
+            List<StopTimes> stopTimes = stopTimesRespository.findAllByTripId(trip_id);
+            StopTimes origin = stopTimes.get(0);
+            StopTimes destination = stopTimes.get(stopTimes.size()-1);
+
+            SimpleDateFormat localTimeFormat = new SimpleDateFormat(ETicketingConstant.TIMEFORMAT);
+            //localTimeFormat.setTimeZone(timeZone);
+            String startTime = localTimeFormat.format(origin.getDepartureTime());
+            String endTime = localTimeFormat.format(destination.getArrivalTime());
+
+            Stops originStop = stopsRepository.findById(origin.getStopId()).get();
+            Stops destinationStop = stopsRepository.findById(destination.getStopId()).get();
+
+            boatScheduleDto.setStartTime(startTime);
+            boatScheduleDto.setStartLocation(originStop.getStopName());
+            boatScheduleDto.setEndTime(endTime);
+            boatScheduleDto.setEndLocation(destinationStop.getStopName());
+
+            boatScheduleDtos.add(boatScheduleDto);
+        }
+        return ResponseEntity.ok(boatScheduleDtos);
     }
 
    private List<BoatScheduleResponseDto> getScheduleForBoat(List<ScheduledJourney>  scheduleList) {
