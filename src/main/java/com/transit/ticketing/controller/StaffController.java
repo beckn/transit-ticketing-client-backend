@@ -38,7 +38,7 @@ public class StaffController {
 
     @GetMapping(value="/api/v1/secure/staffs/boatmaster")
     public ResponseEntity<List<StaffDto>> listAllBoatMasterStaff() {
-        StaffDto staffDto = new StaffDto();
+        /*StaffDto staffDto = new StaffDto();
         staffDto.setStaffId("1");
         staffDto.setStaffName("Navjeet Singh");
         staffDto.setBoatNumber("1102");
@@ -60,14 +60,14 @@ public class StaffController {
 
         List<StaffDto> staffDtos = new ArrayList<>();
         staffDtos.add(staffDto);
-        staffDtos.add(staffDto2);
+        staffDtos.add(staffDto2);*/
 
-        return ResponseEntity.ok().body(staffDtos);
+        return ResponseEntity.ok().body(staffService.listAllBoatmasters());
     }
 
     @GetMapping(value="/api/v1/secure/staffs/ticketmaster")
     public ResponseEntity<List<StaffDto>> listAllTicketMasterStaff() {
-        StaffDto staffDto = new StaffDto();
+        /*StaffDto staffDto = new StaffDto();
         staffDto.setStaffId("3");
         staffDto.setStaffName("Navjeet Singh");
         staffDto.setBoatNumber("1102");
@@ -91,7 +91,8 @@ public class StaffController {
         staffDtos.add(staffDto);
         staffDtos.add(staffDto2);
 
-        return ResponseEntity.ok().body(staffDtos);
+        return ResponseEntity.ok().body(staffDtos);*/
+        return ResponseEntity.ok().body(staffService.listAllTicketmasters());
     }
 
     @GetMapping(value="/api/v1/secure/staffs?page={page}&records={records}")

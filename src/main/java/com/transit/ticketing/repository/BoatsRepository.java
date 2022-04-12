@@ -13,4 +13,7 @@ public interface BoatsRepository extends JpaRepository<Boats,Long> {
 
     @Query(value = "select schedule_name from schedule where schedule_id = (select schedule_id from scheduled_journey where boat_id=?1)",nativeQuery = true)
     String findScheduleNameByBoat_id(long boatId);
+
+    @Query(value = "select * from boats where station_id=?1",nativeQuery = true)
+    Boats findByStationId(long station_id);
 }

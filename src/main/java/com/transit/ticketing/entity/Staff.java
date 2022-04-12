@@ -19,5 +19,11 @@ public class Staff {
     private String staff_name;
     private long station_id;
     private String role;
+    private String doj;
+    private String position;
+    private String shift;
+    @OneToOne
+    @JoinColumn(name = "station_id" , referencedColumnName = "station_id", insertable = false, updatable = false)
+    Stations stations;
 
 }
