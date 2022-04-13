@@ -1,6 +1,7 @@
 package com.transit.ticketing.repository;
 
 import com.transit.ticketing.entity.SalesRecords;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -22,4 +23,10 @@ public interface SalesRecordsRepository extends JpaRepository<SalesRecords,Long>
     @Modifying
     @Query(value="update sales_records set signature = ?1 where order_id = ?2",nativeQuery = true)
     int setSignatureForSalesRecords(String signature, Long id);
+
+    @Query(value = "select * from sales_records where trip_id=?1 and boat_id=?2",nativeQuery = true)
+    List<SalesRecords> findAllByTripIdAndBoatId(Long tripId, Long boatId);
+
+    @Query(value = "select * from sales_records order by date_of_journey desc", nativeQuery = true)
+    List<SalesRecords> findAllSalesRecord();
 }
