@@ -49,7 +49,7 @@ CREATE TABLE STOPS (
 -- Entries added every day
 -- Create a record here based on entry in table SCHEDULE
 CREATE TABLE TRIP_INVENTORY (
-    id BIGINT(20) NOT NULL,
+    id BIGINT(20) NOT NULL AUTO_INCREMENT,
     journey_date TIMESTAMP NOT NULL, -- Only Date is used
     stop_id BIGINT(20) NOT NULL,
     trip_id BIGINT(20) NOT NULL,
