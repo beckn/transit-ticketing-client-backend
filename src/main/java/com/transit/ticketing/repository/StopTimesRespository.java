@@ -14,4 +14,5 @@ public interface StopTimesRespository extends JpaRepository<StopTimes,Long> {
     @Query (value = "From StopTimes where stop_id=?1 and stop_sequence=0 order by arrival_time")
     List<StopTimes> findAllByOriginStop(long stop_id);
 
+    StopTimes findAllByStopIdAndTripId(long stopId, Long tripId);
 }

@@ -21,4 +21,6 @@ public interface TripInventoryRepository extends JpaRepository<TripInventory,Lon
     @Modifying
     @Query(value = "update trip_inventory set issued_tickets = issued_tickets+?5  where trip_id=?1 and journey_date like ?2% and stop_sequence >=?3 and stop_sequence <?4",nativeQuery = true)
     int updateIssuedTicketCount(long tripId,String journeyDate,int sourceStopSequence,int destinationStopSequence,int numberOfTickets);
+
+    List<TripInventory> findAllByTripId(Long tripId);
 }
