@@ -7,7 +7,6 @@ import com.transit.ticketing.entity.*;
 import com.transit.ticketing.exception.ETicketingException;
 import com.transit.ticketing.repository.*;
 import com.transit.ticketing.service.BoatScheduleService;
-import com.transit.ticketing.service.ScheduledTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +36,7 @@ public class BoatScheduleServiceImpl implements BoatScheduleService {
     StopsRepository stopsRepository;
 
     @Override
-    public ResponseEntity<List<BoatScheduleDto>> findScheduleBoat(Long boatId) throws ETicketingException {
+    public ResponseEntity<Object> findScheduleBoat(Long boatId) throws ETicketingException {
         List<ScheduledJourney> scheduleList = scheduleJourneyRepository.fetchScheduleBoat(boatId);
         List<BoatScheduleDto> boatScheduleDtos = new ArrayList<>();
         for(ScheduledJourney scheduledJourney:scheduleList){
@@ -75,7 +74,7 @@ public class BoatScheduleServiceImpl implements BoatScheduleService {
     }
 
     @Override
-    public ResponseEntity<List<BoatScheduleDto>> findAllScheduleBoats() throws ETicketingException {
+    public ResponseEntity<Object> findAllScheduleBoats() throws ETicketingException {
         List<ScheduledJourney> scheduleList = scheduleJourneyRepository.fetchAllScheduleBoats();
         // For each schedulejourney form the response dto
         List<BoatScheduleDto> boatScheduleDtos = new ArrayList<>();
@@ -110,7 +109,11 @@ public class BoatScheduleServiceImpl implements BoatScheduleService {
 
             boatScheduleDtos.add(boatScheduleDto);
         }
-        return ResponseEntity.ok(boatScheduleDtos);
+        Map<String, Object> boatSchedules = new HashMap<>();
+        boatSchedules.put("boatSchedules", boatScheduleDtos);
+        boatSchedules.put("boatSchedulesTotalCount", boatScheduleDtos.size());
+
+        return ResponseEntity.ok(boatSchedules);
     }
 
    private List<BoatScheduleResponseDto> getScheduleForBoat(List<ScheduledJourney>  scheduleList) {

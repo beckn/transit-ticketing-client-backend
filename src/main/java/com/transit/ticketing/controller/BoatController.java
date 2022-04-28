@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class BoatController {
@@ -24,8 +26,10 @@ public class BoatController {
     BoatService boatService;
 
     @GetMapping(value = "/api/v1/secure/boats")
-    public ResponseEntity<List<BoatsDto>> search() throws ETicketingException {
+    public ResponseEntity<Object> search() throws ETicketingException {
         LOG.info("Received request: /api/v1/secure/boats");
+        Map<String, Object> boats = new HashMap<>();
+
         BoatsDto boatsDto = new BoatsDto();
         boatsDto.setBootNo("1102");
         boatsDto.setBoatMaster("Navjeet Singh");
@@ -48,7 +52,12 @@ public class BoatController {
         boatsDtos.add(boatsDto);
         boatsDtos.add(boatsDto2);
         //return ResponseEntity.ok().body(boatService.listAllBoats());
-        return ResponseEntity.ok().body(boatsDtos);
+
+        boats.put("boats", boatsDtos);
+        boats.put("boatsCount", boatsDtos.size());
+        boats.put("boatsOutOfService", boatsDtos.stream().filter(boat -> boat.getStatus().equalsIgnoreCase("Service")).count());
+        boats.put("boatsAvailable", boatsDtos.stream().filter(boat -> boat.getStatus().equalsIgnoreCase("New")).count());
+        return ResponseEntity.ok().body(boats);
     }
 
     @GetMapping(value = "/api/v1/secure/boats/page={page}&records={records}")
