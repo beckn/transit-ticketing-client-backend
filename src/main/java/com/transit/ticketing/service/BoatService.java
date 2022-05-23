@@ -22,7 +22,7 @@ public class BoatService {
         List<BoatsDto> boatsDtos = new ArrayList<>();
         for(Boats boat: boats){
             BoatsDto boatsDto = new BoatsDto();
-            boatsDto.setBootNo(boat.getBoat_reg_no());
+            boatsDto.setBoatNo(boat.getBoat_reg_no());
             DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
             boatsDto.setLastServiceDate(df.format(boat.getLast_service_dt()));
             boatsDto.setNewServiceDate(df.format(boat.getNew_service_dt()));
@@ -40,7 +40,7 @@ public class BoatService {
         List<BoatsDto> boatsDtos = new ArrayList<>();
         for(Boats boat: boats){
             BoatsDto boatsDto = new BoatsDto();
-            boatsDto.setBootNo(boat.getBoat_reg_no());
+            boatsDto.setBoatNo(boat.getBoat_reg_no());
             DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
             boatsDto.setLastServiceDate(df.format(boat.getLast_service_dt()));
             boatsDto.setNewServiceDate(df.format(boat.getNew_service_dt()));

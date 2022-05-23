@@ -6,7 +6,7 @@ import lombok.ToString;
 @Data
 @ToString
 public class BoatsDto {
-    private String bootNo;
+    private String boatNo;
     private String boatMaster;
     private String schedule;
     private String lastServiceDate;
