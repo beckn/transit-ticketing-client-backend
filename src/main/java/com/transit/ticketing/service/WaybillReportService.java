@@ -1,5 +1,6 @@
 package com.transit.ticketing.service;
 
+import com.transit.ticketing.dto.WayBillReportDto;
 import com.transit.ticketing.entity.*;
 import com.transit.ticketing.repository.*;
 import org.flywaydb.core.internal.util.DateUtils;
@@ -41,6 +42,9 @@ public class WaybillReportService {
 
     @Autowired
     private StopsRepository stopsRepository;
+
+    @Autowired
+    private StaffRepository staffRepository;
 
     public List<WayBillReport> updateWaybillReportData () {
         LOG.info("Updating waybill report");
@@ -97,6 +101,45 @@ public class WaybillReportService {
         }
 
         return wayBillReports;
+    }
+
+    public List<WayBillReportDto> findAllWaybillReports() {
+        List<WayBillReport> reports = waybillReportRepository.findAll();
+        List<WayBillReportDto> wayBillReportDtos = new ArrayList<>();
+
+        for (WayBillReport report: reports) {
+            WayBillReportDto reportDto = new WayBillReportDto();
+            reportDto.setWayBillNumber(report.getWayBillNumber());
+
+            Boats boats = boatsRepository.findByBoatRegNo(report.getBoatNumber());
+            Staff staff = staffRepository.findByStationId(boats.getStation_id());
+            reportDto.setBoatMasterId(staff.getStaff_id());
+            reportDto.setBoatMasterName(staff.getStaff_name());
+            reportDto.setBoatNumber(report.getBoatNumber());
+
+            reportDto.setStartingTime(report.getStartingTime());
+            reportDto.setStartingStage(report.getStartingStage());
+            reportDto.setEndingTime(report.getEndingTime());
+            reportDto.setEndingStage(report.getEndingStage());
+            reportDto.setStartTicketNumber(report.getStartTicketNumber());
+            reportDto.setEndTicketNumber(report.getEndTicketNumber());
+            reportDto.setTotalPassengers(report.getTotalPassengers());
+            reportDto.setTotalIncome(report.getTotalIncome());
+            reportDto.setRoutes(report.getRoutes());
+
+            List<SalesRecords> salesRecords = salesRecordsRepository.findAllByTripIdAndBoatId(report.getTrips().getTrip_id(), boats.getBoat_id());
+            List<Trips> trips = new ArrayList<>();
+            // TODO calculate trips by establishing proper relations
+//            for (SalesRecords records: salesRecords) {
+//
+//
+//            }
+            reportDto.setTrips(tripsRepository.findAll());
+
+            wayBillReportDtos.add(reportDto);
+        }
+
+        return wayBillReportDtos;
     }
 
 

@@ -6,18 +6,18 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import java.util.Date;
+import java.util.List;
 
 @Data
 @EqualsAndHashCode
 @ToString
-public class WaybillReportDto {
+public class WayBillReportDto {
     private long wayBillNumber;
     private long boatMasterId;
-    private long boatNumber;
-    private String wayBillDate;
+    private String boatNumber;
+//    private String wayBillDate;
     private String boatMasterName;
-    private String status;
+//    private String status;
     private String startingTime;
     private String startingStage;
     private String endingTime;
@@ -27,6 +27,6 @@ public class WaybillReportDto {
     private Integer totalPassengers;
     private Long totalIncome;
     private Routes routes;
-    private Trips trips;
+    private List<Trips> trips;
 
 }

@@ -21,6 +21,14 @@ public class WayBillReport {
     @Column(name = "boat_number", nullable = false)
     private String boatNumber;
 
+
+    @Column(name = "boat_master_name", nullable = false)
+    private String boatMasterName;
+
+
+    @Column(name = "boat_master_id", nullable = false)
+    private String boatMasterId;
+
     @Column(name = "starting_time", nullable = false)
     private String startingTime;
 

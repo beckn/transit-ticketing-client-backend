@@ -18,4 +18,7 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
 
     @Query(value = "SELECT * FROM staff where role = 'Ticketmaster'",nativeQuery = true)
     List<Staff> findAllTicketMasters();
+
+    @Query(value = "SELECT * FROM staff where station_id =?1",nativeQuery = true)
+    Staff findByStationId(long station_id);
 }
