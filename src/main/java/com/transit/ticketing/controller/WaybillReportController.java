@@ -31,6 +31,7 @@ public class WaybillReportController {
 
     @GetMapping(value="/api/v1/secure/waybillreport")
     public ResponseEntity<Object> getWaybillReport() {
+        LOG.info("Calling way bill service to get all the waybill reports");
         Map<String, Object> report = new HashMap<>();
 //        report.put("waybillReports", waybillReportRepository.findAll());
         List<WayBillReportDto> wayBillReportDtos = waybillReportService.findAllWaybillReports();
