@@ -68,20 +68,27 @@ public class StaffService {
     public List<StaffDto> listAllBoatmasters(){
         List<Staff> staffList = staffRepository.findAllBoatMasters();
         List<StaffDto> staffDtos = new ArrayList<>();
-        for(Staff staff: staffList){
-            StaffDto staffDto = new StaffDto();
-            staffDto.setStaffId(String.valueOf(staff.getStaff_id()));
-            staffDto.setStaffName(staff.getStaff_name());
-            staffDto.setDateOfJoining(staff.getDoj());
-            staffDto.setPosition(staff.getPosition());
-            staffDto.setShift(staff.getShift());
-            staffDto.setStation(staff.getStations().getStation_name());
-            staffDto.setRole(staff.getRole());
-            // Get boat number
-            Boats boats = boatsRepository.findByStationId(staff.getStation_id());
-            staffDto.setBoatNumber(boats.getBoat_reg_no());
-            staffDtos.add(staffDto);
+
+        try {
+            for(Staff staff: staffList){
+                StaffDto staffDto = new StaffDto();
+                staffDto.setStaffId(String.valueOf(staff.getStaff_id()));
+                staffDto.setStaffName(staff.getStaff_name());
+                staffDto.setDateOfJoining(staff.getDoj());
+                staffDto.setPosition(staff.getPosition());
+                staffDto.setShift(staff.getShift());
+                staffDto.setStation(staff.getStations().getStation_name());
+                staffDto.setRole(staff.getRole());
+                // Get boat number
+                Boats boats = boatsRepository.findByStationId(staff.getStation_id());
+                staffDto.setBoatNumber(boats.getBoat_reg_no());
+                staffDtos.add(staffDto);
+            }
+        } catch (Exception e) {
+            LOG.error(e.getMessage());
+            e.printStackTrace();
         }
+
         return staffDtos;
 
     }
