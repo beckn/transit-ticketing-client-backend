@@ -114,7 +114,6 @@ public class WaybillReportService {
 
                 Boats boats = boatsRepository.findByBoatRegNo(report.getBoatNumber());
                 Staff staff = staffRepository.findByStationId(boats.getStation_id());
-                LOG.info(String.valueOf(staff.getStaff_id()));
                 reportDto.setBoatMasterId(staff.getStaff_id());
                 reportDto.setBoatMasterName(staff.getStaff_name());
                 reportDto.setBoatNumber(report.getBoatNumber());
@@ -128,6 +127,7 @@ public class WaybillReportService {
                 reportDto.setTotalPassengers(report.getTotalPassengers());
                 reportDto.setTotalIncome(report.getTotalIncome());
                 reportDto.setRoutes(report.getRoutes());
+                reportDto.setStatus("Completed");
 
                 List<SalesRecords> salesRecords = salesRecordsRepository.findAllByTripIdAndBoatId(report.getTrips().getTrip_id(), boats.getBoat_id());
                 List<Trips> trips = new ArrayList<>();

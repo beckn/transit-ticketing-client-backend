@@ -17,7 +17,7 @@ public class WayBillReportDto {
     private String boatNumber;
 //    private String wayBillDate;
     private String boatMasterName;
-//    private String status;
+    private String status;
     private String startingTime;
     private String startingStage;
     private String endingTime;
