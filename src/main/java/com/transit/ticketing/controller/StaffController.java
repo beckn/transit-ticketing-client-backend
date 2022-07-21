@@ -12,8 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @RestController
 public class StaffController {
@@ -21,6 +20,31 @@ public class StaffController {
 
     @Autowired
     private StaffService staffService;
+
+    @PostMapping(value = "/payment")
+    public ResponseEntity<Object> createStaff(@RequestBody Map<String, Object> payment) {
+        String amount = "0";
+        Map<String, Object> message = (Map<String, Object>) payment.get("message");
+        Map<String, Object> order = (Map<String, Object>) message.get("order");
+        Map<String, Object> payments = (Map<String, Object>) order.get("payment");
+        Map<String, Object> params = (Map<String, Object>) payments.get("params");
+        amount = params.get("amount").toString();
+
+        Map<String, String> jsonResponse = new HashMap<>();
+
+        jsonResponse.put("clientCode", "CO1234");
+        jsonResponse.put("productCode", "CMSPAY");
+        jsonResponse.put("paymentDate", new Date(new Date().getTime() + (1000 * 60 * 60 * 24)).toString());
+        jsonResponse.put("amount", amount);
+        jsonResponse.put("bankCodeIndicator", "M-MICR");
+        jsonResponse.put("beneficiaryCode", "DF345");
+        jsonResponse.put("beneficiaryName", "A to Z Printing Solutions Pvt. Ltd.");
+        jsonResponse.put("beneficiaryBank", "Kotak");
+        jsonResponse.put("beneficiaryBranch", "Guwahati Main branch");
+        jsonResponse.put("beneficiaryAccountNumber", "37476345377787");
+
+        return ResponseEntity.ok(jsonResponse);
+    }
 
     @PostMapping(value = "/api/v1/secure/staff")
     public ResponseEntity<Object> createStaff(@RequestBody Staff staff) {
